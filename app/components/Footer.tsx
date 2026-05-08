@@ -36,7 +36,7 @@ export default function Footer() {
               marginBottom: '12px',
               letterSpacing: '-0.5px',
             }}>
-              VideoLabs AI
+              AI VIDEO LABS
             </div>
             <p style={{
               fontSize: '14px',
@@ -139,7 +139,7 @@ export default function Footer() {
           gap: '12px',
         }}>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
-            © {year} VideoLabs AI – Alle Rechte vorbehalten
+            © {year} AI Video Labs – Alle Rechte vorbehalten
           </p>
           <div style={{ display: 'flex', gap: '20px' }}>
             {['Datenschutz', 'Impressum', 'AGB'].map(item => (

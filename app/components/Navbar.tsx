@@ -52,7 +52,7 @@ export default function Navbar() {
           backgroundClip: 'text',
           letterSpacing: '-0.5px',
         }}>
-          VideoLabs<span style={{ WebkitTextFillColor: '#00d9ff' }}> AI</span>
+          AI VIDEO<span style={{ WebkitTextFillColor: '#00d9ff' }}> LABS</span>
         </span>
       </a>
 
@@ -183,43 +183,74 @@ export default function Navbar() {
 function LogoIcon() {
   return (
     <div style={{
-      width: '40px',
-      height: '40px',
-      borderRadius: '10px',
-      background: 'linear-gradient(135deg, #0a0e27, #1a1a3f)',
-      border: '1.5px solid rgba(255, 0, 255, 0.4)',
+      width: '42px',
+      height: '42px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 0 15px rgba(255, 0, 255, 0.3), 0 0 30px rgba(138, 43, 226, 0.15)',
-      position: 'relative',
-      overflow: 'hidden',
+      filter: 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 16px rgba(0, 217, 255, 0.3))',
     }}>
-      {/* Neural network dots */}
-      {[[20, 50], [50, 20], [50, 80], [80, 50], [35, 35], [65, 35], [35, 65], [65, 65]].map(([x, y], i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          width: i < 4 ? '4px' : '3px',
-          height: i < 4 ? '4px' : '3px',
-          borderRadius: '50%',
-          background: i < 4 ? '#ff00ff' : 'rgba(0, 217, 255, 0.8)',
-          left: `${x}%`,
-          top: `${y}%`,
-          transform: 'translate(-50%, -50%)',
-          boxShadow: i < 4 ? '0 0 6px #ff00ff' : '0 0 4px #00d9ff',
-        }} />
-      ))}
-      {/* Play triangle */}
-      <div style={{
-        width: 0,
-        height: 0,
-        borderTop: '7px solid transparent',
-        borderBottom: '7px solid transparent',
-        borderLeft: '12px solid rgba(0, 217, 255, 0.9)',
-        marginLeft: '2px',
-        filter: 'drop-shadow(0 0 4px #00d9ff)',
-        zIndex: 1,
-      }} />
+      <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#6B3FA0" />
+            <stop offset="40%" stopColor="#4F6FD4" />
+            <stop offset="100%" stopColor="#00D9FF" />
+          </linearGradient>
+          <linearGradient id="logoGradLines" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#00D9FF" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+
+        {/* ── Outer play-triangle outline ── */}
+        {/* Nodes: top=A(50,6), bottom-left=B(8,92), bottom-right=C(92,50), mid-right=D(92,50) */}
+        {/* Using a proper play-button triangle shape with nodes at corners + midpoints */}
+
+        {/* Corner nodes */}
+        {/* A = top (50, 5), B = bottom-left (7, 90), C = right-tip (93, 48) */}
+        {/* Midpoints: AB-mid (28, 47), AC-mid (71, 26), BC-mid (50, 69) */}
+        {/* Inner nodes: center-left (40, 48), inner-top (55, 28), inner-right (72, 48), inner-bottom (55, 65) */}
+
+        {/* Lines – outer triangle edges */}
+        <line x1="50" y1="6" x2="7" y2="90" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="50" y1="6" x2="93" y2="48" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
+        <line x1="7" y1="90" x2="93" y2="48" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
+
+        {/* Lines – inner connections (neural network web) */}
+        <line x1="50" y1="6"  x2="28" y2="47" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="50" y1="6"  x2="71" y2="26" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="7"  y1="90" x2="28" y2="47" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="7"  y1="90" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="93" y1="48" x2="71" y2="26" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="93" y1="48" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="93" y1="48" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
+        <line x1="28" y1="47" x2="40" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="71" y1="26" x2="55" y2="28" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="50" y1="69" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="40" y1="48" x2="55" y2="28" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        <line x1="40" y1="48" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        <line x1="40" y1="48" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        <line x1="55" y1="28" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        <line x1="72" y1="48" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        <line x1="28" y1="47" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.65"/>
+
+        {/* ── Corner / outer nodes (larger) ── */}
+        <circle cx="50" cy="6"  r="4.5" fill="url(#logoGrad)" />
+        <circle cx="7"  cy="90" r="4.5" fill="url(#logoGrad)" />
+        <circle cx="93" cy="48" r="4.5" fill="url(#logoGrad)" />
+
+        {/* ── Midpoint nodes ── */}
+        <circle cx="28" cy="47" r="3.2" fill="url(#logoGrad)" />
+        <circle cx="71" cy="26" r="3.2" fill="url(#logoGrad)" />
+        <circle cx="50" cy="69" r="3.2" fill="url(#logoGrad)" />
+
+        {/* ── Inner cluster nodes ── */}
+        <circle cx="40" cy="48" r="2.8" fill="url(#logoGrad)" />
+        <circle cx="55" cy="28" r="2.8" fill="url(#logoGrad)" />
+        <circle cx="72" cy="48" r="2.8" fill="url(#logoGrad)" />
+        <circle cx="55" cy="65" r="2.8" fill="url(#logoGrad)" />
+      </svg>
     </div>
   );
 }
