@@ -188,7 +188,7 @@ function LogoIcon() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      filter: 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 16px rgba(0, 217, 255, 0.3))',
+      filter: 'drop-shadow(0 0 4px rgba(99, 102, 241, 0.35)) drop-shadow(0 0 8px rgba(0, 217, 255, 0.15))',
     }}>
       <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>

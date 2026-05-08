@@ -6,10 +6,12 @@ import Stats from './components/Stats';
 import CTA from './components/CTA';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import ChipBackground from './components/ChipBackground';
 
 export default function Home() {
   return (
     <>
+      <ChipBackground />
       <Navbar />
       <main>
         <Hero />

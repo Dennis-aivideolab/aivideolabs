@@ -121,7 +121,7 @@ export default function Footer() {
               Kontakt
             </h4>
             <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 2 }}>
-              <div>📧 hello@aivideolabs.ch</div>
+              <div>📧 aivideolabs.ch@gmail.com</div>
               <div>🌐 aivideolabs.ch</div>
               <div>📍 Schweiz 🇨🇭</div>
             </div>

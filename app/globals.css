@@ -127,9 +127,9 @@ body {
 }
 
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 0, 255, 0.4);
-  box-shadow: 0 8px 40px rgba(255, 0, 255, 0.2), 0 0 0 1px rgba(255, 0, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 0, 255, 0.25);
+  box-shadow: 0 8px 30px rgba(255, 0, 255, 0.1);
 }
 
 .btn-primary {
@@ -144,7 +144,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4), 0 4px 20px rgba(138, 43, 226, 0.3);
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.25), 0 4px 14px rgba(138, 43, 226, 0.2);
 }
 
 .btn-primary::before {
@@ -154,18 +154,18 @@ body {
   left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shine 3s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shine 4s ease-in-out infinite;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 0 40px rgba(255, 0, 255, 0.7), 0 8px 30px rgba(138, 43, 226, 0.5);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4), 0 6px 20px rgba(138, 43, 226, 0.3);
 }
 
 .btn-secondary {
   background: transparent;
-  border: 1.5px solid rgba(0, 217, 255, 0.6);
+  border: 1.5px solid rgba(0, 217, 255, 0.4);
   color: #00d9ff;
   padding: 14px 32px;
   border-radius: 50px;
@@ -178,9 +178,9 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 217, 255, 0.1);
-  border-color: #00d9ff;
-  box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  background: rgba(0, 217, 255, 0.07);
+  border-color: rgba(0, 217, 255, 0.7);
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.2);
   transform: translateY(-2px);
 }
 

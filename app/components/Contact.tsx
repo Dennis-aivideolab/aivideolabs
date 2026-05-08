@@ -104,7 +104,7 @@ export default function Contact() {
                 Kontaktinfo
               </h3>
               {[
-                { icon: '📧', label: 'E-Mail', value: 'hello@aivideolabs.ch', color: '#ff00ff' },
+                { icon: '📧', label: 'E-Mail', value: 'aivideolabs.ch@gmail.com', color: '#ff00ff' },
                 { icon: '🌐', label: 'Website', value: 'aivideolabs.ch', color: '#00d9ff' },
                 { icon: '📍', label: 'Standort', value: 'Schweiz 🇨🇭', color: '#8a2be2' },
                 { icon: '⏱️', label: 'Response', value: 'Innerhalb 24h', color: '#ff6b6b' },
