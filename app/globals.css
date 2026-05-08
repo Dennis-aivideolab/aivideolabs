@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0e27;
-  --bg-secondary: #1a1a3f;
-  --bg-tertiary: #0f1628;
-  --magenta: #ff00ff;
-  --purple: #8a2be2;
-  --cyan: #00d9ff;
+  --bg-primary: #0d1540;
+  --bg-secondary: #172060;
+  --bg-tertiary: #0b1235;
+  --magenta: #c026d3;
+  --purple: #7c3aed;
+  --cyan: #06b6d4;
 }
 
 * {
@@ -20,17 +20,17 @@ html {
 }
 
 body {
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1a3f 50%, #0f1628 100%);
+  background: linear-gradient(160deg, #0d1540 0%, #172060 40%, #0e1a50 70%, #0b1235 100%);
   background-attachment: fixed;
-  color: #ffffff;
+  color: #f0f4ff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0a0e27; }
+::-webkit-scrollbar-track { background: #0d1540; }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#ff00ff, #8a2be2);
+  background: linear-gradient(#7c3aed, #06b6d4);
   border-radius: 3px;
 }
 
@@ -104,36 +104,34 @@ body {
 .animate-orb3 { animation: orb-drift 20s ease-in-out infinite; animation-delay: -6s; }
 
 .gradient-text {
-  background: linear-gradient(135deg, #ff00ff, #8a2be2, #00d9ff, #ff00ff);
-  background-size: 300% auto;
+  background: linear-gradient(135deg, #818cf8, #7c3aed, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmer 4s linear infinite;
 }
 
 .gradient-text-static {
-  background: linear-gradient(135deg, #ff00ff, #8a2be2, #00d9ff);
+  background: linear-gradient(135deg, #818cf8, #7c3aed, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 0, 255, 0.25);
-  box-shadow: 0 8px 30px rgba(255, 0, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(124, 58, 237, 0.35);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.12);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #ff00ff, #8a2be2);
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
   border: none;
   color: white;
   padding: 14px 32px;
@@ -144,7 +142,7 @@ body {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(255, 0, 255, 0.25), 0 4px 14px rgba(138, 43, 226, 0.2);
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
 }
 
 .btn-primary::before {
@@ -154,19 +152,19 @@ body {
   left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: shine 4s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: shine 5s ease-in-out infinite;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4), 0 6px 20px rgba(138, 43, 226, 0.3);
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.5);
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1.5px solid rgba(0, 217, 255, 0.4);
-  color: #00d9ff;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(6, 182, 212, 0.45);
+  color: #67e8f9;
   padding: 14px 32px;
   border-radius: 50px;
   font-size: 16px;
@@ -178,9 +176,9 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 217, 255, 0.07);
-  border-color: rgba(0, 217, 255, 0.7);
-  box-shadow: 0 0 16px rgba(0, 217, 255, 0.2);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.7);
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.2);
   transform: translateY(-2px);
 }
 

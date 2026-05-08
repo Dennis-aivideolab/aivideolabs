@@ -8,24 +8,24 @@ const services = [
     title: 'Video Production',
     desc: 'Professionelle Werbevideos und Social Media Content – optimiert für maximale Reichweite.',
     tags: ['TikTok', 'Reels', 'YouTube'],
-    color: '#ff00ff',
-    glow: 'rgba(255, 0, 255, 0.3)',
+    color: '#a855f7',
+    glow: 'rgba(168, 85, 247, 0.3)',
   },
   {
     icon: '🤖',
     title: 'AI Design',
     desc: 'Innovative Design-Konzepte mit neuronalen Netzwerken. Asset-Generierung in Rekordzeit.',
     tags: ['AI Art', 'Branding', 'Motion'],
-    color: '#8a2be2',
-    glow: 'rgba(138, 43, 226, 0.3)',
+    color: '#7c3aed',
+    glow: 'rgba(124, 58, 237, 0.3)',
   },
   {
     icon: '📸',
     title: 'Advertising Content',
     desc: 'Premium Fotografie und Product Shots – professionell inszeniert für höchste Wirkung.',
     tags: ['Product', 'Campaign', 'Editorial'],
-    color: '#00d9ff',
-    glow: 'rgba(0, 217, 255, 0.3)',
+    color: '#22d3ee',
+    glow: 'rgba(34, 211, 238, 0.3)',
   },
   {
     icon: '🌐',
@@ -52,7 +52,7 @@ export default function Services() {
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         width: '700px', height: '400px',
-        background: 'radial-gradient(ellipse, rgba(138, 43, 226, 0.06) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse, rgba(124, 58, 237, 0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
 
@@ -61,12 +61,12 @@ export default function Services() {
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(138, 43, 226, 0.1)',
-            border: '1px solid rgba(138, 43, 226, 0.3)',
+            background: 'rgba(124, 58, 237, 0.1)',
+            border: '1px solid rgba(124, 58, 237, 0.3)',
             borderRadius: '50px',
             padding: '5px 16px',
             fontSize: '12px',
-            color: '#8a2be2',
+            color: '#7c3aed',
             letterSpacing: '2px',
             textTransform: 'uppercase',
             marginBottom: '16px',
@@ -152,7 +152,7 @@ export default function Services() {
                 width: '60px',
                 height: '60px',
                 borderRadius: '14px',
-                background: `rgba(${service.color === '#ff00ff' ? '255,0,255' : service.color === '#8a2be2' ? '138,43,226' : service.color === '#00d9ff' ? '0,217,255' : '255,107,107'}, 0.12)`,
+                background: `rgba(${service.color === '#a855f7' ? '255,0,255' : service.color === '#7c3aed' ? '138,43,226' : service.color === '#22d3ee' ? '0,217,255' : '255,107,107'}, 0.12)`,
                 border: `1px solid ${service.glow}`,
                 display: 'flex',
                 alignItems: 'center',
@@ -190,7 +190,7 @@ export default function Services() {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {service.tags.map((tag, j) => (
                   <span key={j} style={{
-                    background: `rgba(${service.color === '#ff00ff' ? '255,0,255' : service.color === '#8a2be2' ? '138,43,226' : service.color === '#00d9ff' ? '0,217,255' : '255,107,107'}, 0.1)`,
+                    background: `rgba(${service.color === '#a855f7' ? '255,0,255' : service.color === '#7c3aed' ? '138,43,226' : service.color === '#22d3ee' ? '0,217,255' : '255,107,107'}, 0.1)`,
                     border: `1px solid ${service.glow}`,
                     borderRadius: '6px',
                     padding: '3px 10px',

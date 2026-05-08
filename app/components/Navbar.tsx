@@ -43,16 +43,8 @@ export default function Navbar() {
       {/* Logo */}
       <a href="#home" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <LogoIcon />
-        <span style={{
-          fontSize: '20px',
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #ff00ff, #8a2be2, #00d9ff)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          letterSpacing: '-0.5px',
-        }}>
-          AI VIDEO<span style={{ WebkitTextFillColor: '#00d9ff' }}> LABS</span>
+        <span style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.5px' }}>
+          AI VIDEO <span style={{ color: '#67e8f9' }}>LABS</span>
         </span>
       </a>
 
@@ -81,23 +73,23 @@ export default function Navbar() {
         ))}
         <a href="#contact" style={{
           marginLeft: '8px',
-          background: 'linear-gradient(135deg, #ff00ff, #8a2be2)',
+          background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
           color: 'white',
           textDecoration: 'none',
           padding: '9px 22px',
           borderRadius: '50px',
           fontSize: '14px',
           fontWeight: 600,
-          boxShadow: '0 0 20px rgba(255,0,255,0.4)',
+          boxShadow: '0 0 20px rgba(168,85,247,0.4)',
           transition: 'all 0.3s ease',
         }}
         onMouseEnter={e => {
           (e.target as HTMLElement).style.transform = 'translateY(-1px)';
-          (e.target as HTMLElement).style.boxShadow = '0 0 35px rgba(255,0,255,0.65)';
+          (e.target as HTMLElement).style.boxShadow = '0 0 35px rgba(168,85,247,0.65)';
         }}
         onMouseLeave={e => {
           (e.target as HTMLElement).style.transform = 'translateY(0)';
-          (e.target as HTMLElement).style.boxShadow = '0 0 20px rgba(255,0,255,0.4)';
+          (e.target as HTMLElement).style.boxShadow = '0 0 20px rgba(168,85,247,0.4)';
         }}>
           Anfragen →
         </a>
@@ -124,8 +116,8 @@ export default function Navbar() {
             width: '24px',
             height: '2px',
             background: menuOpen
-              ? i === 1 ? 'transparent' : 'linear-gradient(135deg, #ff00ff, #00d9ff)'
-              : 'linear-gradient(135deg, #ff00ff, #00d9ff)',
+              ? i === 1 ? 'transparent' : 'linear-gradient(135deg, #a855f7, #22d3ee)'
+              : 'linear-gradient(135deg, #a855f7, #22d3ee)',
             borderRadius: '2px',
             transition: 'all 0.3s ease',
             transform: menuOpen
@@ -182,74 +174,81 @@ export default function Navbar() {
 
 function LogoIcon() {
   return (
-    <div style={{
-      width: '42px',
-      height: '42px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      filter: 'drop-shadow(0 0 4px rgba(99, 102, 241, 0.35)) drop-shadow(0 0 8px rgba(0, 217, 255, 0.15))',
-    }}>
-      <svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div style={{ width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Accurate recreation of the AI Video Labs logo icon */}
+      <svg width="44" height="44" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="logoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#6B3FA0" />
-            <stop offset="40%" stopColor="#4F6FD4" />
-            <stop offset="100%" stopColor="#00D9FF" />
+          <linearGradient id="lg1" x1="10" y1="105" x2="110" y2="10" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#5B21B6" />
+            <stop offset="35%"  stopColor="#3B82F6" />
+            <stop offset="100%" stopColor="#22D3EE" />
           </linearGradient>
-          <linearGradient id="logoGradLines" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#00D9FF" stopOpacity="0.9" />
+          <linearGradient id="lg2" x1="10" y1="105" x2="110" y2="10" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#7C3AED" />
+            <stop offset="50%"  stopColor="#60A5FA" />
+            <stop offset="100%" stopColor="#67E8F9" />
           </linearGradient>
         </defs>
 
-        {/* ── Outer play-triangle outline ── */}
-        {/* Nodes: top=A(50,6), bottom-left=B(8,92), bottom-right=C(92,50), mid-right=D(92,50) */}
-        {/* Using a proper play-button triangle shape with nodes at corners + midpoints */}
+        {/* === OUTER TRIANGLE EDGES === */}
+        {/* Top-left → Top-right edge */}
+        <line x1="14" y1="98" x2="60" y2="8"  stroke="url(#lg1)" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* Top-left → Right tip */}
+        <line x1="14" y1="98" x2="108" y2="55" stroke="url(#lg1)" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* Top apex → Right tip */}
+        <line x1="60" y1="8"  x2="108" y2="55" stroke="url(#lg1)" strokeWidth="2.5" strokeLinecap="round"/>
 
-        {/* Corner nodes */}
-        {/* A = top (50, 5), B = bottom-left (7, 90), C = right-tip (93, 48) */}
-        {/* Midpoints: AB-mid (28, 47), AC-mid (71, 26), BC-mid (50, 69) */}
-        {/* Inner nodes: center-left (40, 48), inner-top (55, 28), inner-right (72, 48), inner-bottom (55, 65) */}
+        {/* === INNER NETWORK LINES === */}
+        {/* From apex down to center nodes */}
+        <line x1="60" y1="8"  x2="36" y2="52" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        <line x1="60" y1="8"  x2="80" y2="30" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        {/* Bottom-left to inner nodes */}
+        <line x1="14" y1="98" x2="36" y2="52" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        <line x1="14" y1="98" x2="60" y2="78" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        {/* Right tip to inner nodes */}
+        <line x1="108" y1="55" x2="80" y2="30" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        <line x1="108" y1="55" x2="82" y2="55" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        <line x1="108" y1="55" x2="60" y2="78" stroke="url(#lg1)" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.9"/>
+        {/* Cross-connections inner cluster */}
+        <line x1="36" y1="52" x2="48" y2="52" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.8"/>
+        <line x1="80" y1="30" x2="62" y2="32" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.8"/>
+        <line x1="48" y1="52" x2="62" y2="32" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="48" y1="52" x2="82" y2="55" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="48" y1="52" x2="60" y2="78" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="62" y1="32" x2="82" y2="55" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="82" y1="55" x2="60" y2="78" stroke="url(#lg2)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
+        <line x1="36" y1="52" x2="60" y2="78" stroke="url(#lg2)" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.65"/>
 
-        {/* Lines – outer triangle edges */}
-        <line x1="50" y1="6" x2="7" y2="90" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
-        <line x1="50" y1="6" x2="93" y2="48" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
-        <line x1="7" y1="90" x2="93" y2="48" stroke="url(#logoGradLines)" strokeWidth="2.2" strokeLinecap="round"/>
+        {/* === BRAIN SYMBOL (center-left of triangle) === */}
+        {/* Stylized brain outline - two lobes */}
+        <path
+          d="M42 58 C38 54, 36 48, 40 44 C43 41, 46 42, 48 44
+             C48 40, 52 38, 55 41 C58 38, 62 40, 62 44
+             C64 42, 67 43, 67 47 C69 50, 67 55, 64 57
+             C62 59, 60 60, 58 59 L55 63 L52 59
+             C49 60, 46 60, 44 58 Z"
+          stroke="url(#lg2)" strokeWidth="1.6" fill="none" strokeLinejoin="round" strokeLinecap="round"
+        />
+        {/* Brain center divider */}
+        <line x1="55" y1="41" x2="55" y2="63" stroke="url(#lg2)" strokeWidth="1.2" strokeOpacity="0.6" strokeLinecap="round"/>
+        {/* Brain convolution lines */}
+        <path d="M44 50 C46 48, 49 49, 50 51" stroke="url(#lg2)" strokeWidth="1" fill="none" strokeLinecap="round" strokeOpacity="0.7"/>
+        <path d="M60 50 C62 48, 64 49, 64 52" stroke="url(#lg2)" strokeWidth="1" fill="none" strokeLinecap="round" strokeOpacity="0.7"/>
 
-        {/* Lines – inner connections (neural network web) */}
-        <line x1="50" y1="6"  x2="28" y2="47" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="50" y1="6"  x2="71" y2="26" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="7"  y1="90" x2="28" y2="47" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="7"  y1="90" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="93" y1="48" x2="71" y2="26" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="93" y1="48" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="93" y1="48" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.85"/>
-        <line x1="28" y1="47" x2="40" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
-        <line x1="71" y1="26" x2="55" y2="28" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
-        <line x1="50" y1="69" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.75"/>
-        <line x1="40" y1="48" x2="55" y2="28" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
-        <line x1="40" y1="48" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
-        <line x1="40" y1="48" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
-        <line x1="55" y1="28" x2="72" y2="48" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
-        <line x1="72" y1="48" x2="55" y2="65" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
-        <line x1="28" y1="47" x2="50" y2="69" stroke="url(#logoGradLines)" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.65"/>
+        {/* === OUTER CORNER NODES (large) === */}
+        <circle cx="14"  cy="98"  r="5.5" fill="url(#lg1)"/>
+        <circle cx="60"  cy="8"   r="5"   fill="url(#lg1)"/>
+        <circle cx="108" cy="55"  r="5.5" fill="url(#lg1)"/>
 
-        {/* ── Corner / outer nodes (larger) ── */}
-        <circle cx="50" cy="6"  r="4.5" fill="url(#logoGrad)" />
-        <circle cx="7"  cy="90" r="4.5" fill="url(#logoGrad)" />
-        <circle cx="93" cy="48" r="4.5" fill="url(#logoGrad)" />
+        {/* === EDGE MIDPOINT NODES === */}
+        <circle cx="36"  cy="52"  r="4"   fill="url(#lg1)"/>
+        <circle cx="80"  cy="30"  r="3.8" fill="url(#lg1)"/>
+        <circle cx="60"  cy="78"  r="3.8" fill="url(#lg1)"/>
 
-        {/* ── Midpoint nodes ── */}
-        <circle cx="28" cy="47" r="3.2" fill="url(#logoGrad)" />
-        <circle cx="71" cy="26" r="3.2" fill="url(#logoGrad)" />
-        <circle cx="50" cy="69" r="3.2" fill="url(#logoGrad)" />
-
-        {/* ── Inner cluster nodes ── */}
-        <circle cx="40" cy="48" r="2.8" fill="url(#logoGrad)" />
-        <circle cx="55" cy="28" r="2.8" fill="url(#logoGrad)" />
-        <circle cx="72" cy="48" r="2.8" fill="url(#logoGrad)" />
-        <circle cx="55" cy="65" r="2.8" fill="url(#logoGrad)" />
+        {/* === INNER CLUSTER NODES === */}
+        <circle cx="48"  cy="52"  r="3.2" fill="url(#lg2)"/>
+        <circle cx="62"  cy="32"  r="3.2" fill="url(#lg2)"/>
+        <circle cx="82"  cy="55"  r="3.2" fill="url(#lg2)"/>
       </svg>
     </div>
   );

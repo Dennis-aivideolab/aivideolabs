@@ -18,7 +18,7 @@ export default function CTA() {
         transform: 'translateY(-50%)',
         width: '400px', height: '400px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255,0,255,0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%)',
         filter: 'blur(60px)',
         pointerEvents: 'none',
       }} className="animate-orb" />
@@ -28,7 +28,7 @@ export default function CTA() {
         transform: 'translateY(-50%)',
         width: '350px', height: '350px',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(0,217,255,0.08) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%)',
         filter: 'blur(50px)',
         pointerEvents: 'none',
       }} className="animate-orb2" />
@@ -57,7 +57,7 @@ export default function CTA() {
             position: 'absolute',
             top: 0, left: 0, right: 0,
             height: '2px',
-            background: 'linear-gradient(90deg, #ff00ff, #8a2be2, #00d9ff, #8a2be2, #ff00ff)',
+            background: 'linear-gradient(90deg, #a855f7, #7c3aed, #22d3ee, #7c3aed, #a855f7)',
             backgroundSize: '200% auto',
             animation: 'shimmer 3s linear infinite',
           }} />
@@ -68,7 +68,7 @@ export default function CTA() {
             top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             width: '500px', height: '300px',
-            background: 'radial-gradient(ellipse, rgba(138,43,226,0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse, rgba(124,58,237,0.08) 0%, transparent 70%)',
             pointerEvents: 'none',
           }} />
 
@@ -77,13 +77,13 @@ export default function CTA() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(255,0,255,0.1)',
-            border: '1px solid rgba(255,0,255,0.25)',
+            background: 'rgba(168,85,247,0.1)',
+            border: '1px solid rgba(168,85,247,0.25)',
             borderRadius: '50px',
             padding: '5px 16px',
             marginBottom: '24px',
             fontSize: '12px',
-            color: '#ff00ff',
+            color: '#a855f7',
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
             fontWeight: 600,
@@ -111,7 +111,7 @@ export default function CTA() {
             margin: '0 auto 40px',
           }}>
             Lass uns gemeinsam etwas{' '}
-            <span style={{ color: '#00d9ff', fontWeight: 500 }}>Großartiges schaffen.</span>
+            <span style={{ color: '#22d3ee', fontWeight: 500 }}>Großartiges schaffen.</span>
             {' '}Wir sind bereit für deine Vision.
           </p>
 

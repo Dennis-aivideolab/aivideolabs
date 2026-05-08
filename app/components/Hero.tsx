@@ -45,7 +45,7 @@ export default function Hero() {
           transform: 'translate(-50%, -50%)',
           width: '800px', height: '800px',
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(138, 43, 226, 0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(124, 58, 237, 0.12) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
 
@@ -55,7 +55,7 @@ export default function Hero() {
           top: '15%', left: '10%',
           width: '320px', height: '320px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255, 0, 255, 0.18) 0%, rgba(255, 0, 255, 0.04) 60%, transparent 80%)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(168, 85, 247, 0.04) 60%, transparent 80%)',
           filter: 'blur(40px)',
         }} />
 
@@ -65,7 +65,7 @@ export default function Hero() {
           top: '20%', right: '8%',
           width: '280px', height: '280px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, rgba(0, 217, 255, 0.03) 60%, transparent 80%)',
+          background: 'radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.03) 60%, transparent 80%)',
           filter: 'blur(35px)',
         }} />
 
@@ -75,7 +75,7 @@ export default function Hero() {
           bottom: '20%', left: '25%',
           width: '240px', height: '240px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%)',
           filter: 'blur(30px)',
         }} />
 
@@ -85,7 +85,7 @@ export default function Hero() {
           bottom: '-100px', left: '50%',
           transform: 'translateX(-50%)',
           width: '600px', height: '300px',
-          background: 'radial-gradient(ellipse, rgba(255, 0, 255, 0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(168, 85, 247, 0.08) 0%, transparent 70%)',
           filter: 'blur(20px)',
         }} />
 
@@ -96,14 +96,14 @@ export default function Hero() {
             width: i % 3 === 0 ? '3px' : i % 3 === 1 ? '2px' : '4px',
             height: i % 3 === 0 ? '3px' : i % 3 === 1 ? '2px' : '4px',
             borderRadius: '50%',
-            background: i % 3 === 0 ? '#ff00ff' : i % 3 === 1 ? '#00d9ff' : '#8a2be2',
+            background: i % 3 === 0 ? '#a855f7' : i % 3 === 1 ? '#22d3ee' : '#7c3aed',
             left: `${8 + i * 8}%`,
             top: `${20 + (i * 17) % 60}%`,
             boxShadow: i % 3 === 0
-              ? '0 0 8px rgba(255,0,255,0.8)'
+              ? '0 0 8px rgba(168,85,247,0.8)'
               : i % 3 === 1
-              ? '0 0 8px rgba(0,217,255,0.8)'
-              : '0 0 8px rgba(138,43,226,0.8)',
+              ? '0 0 8px rgba(34,211,238,0.8)'
+              : '0 0 8px rgba(124,58,237,0.8)',
             animationDelay: `${i * 0.4}s`,
             opacity: 0.7,
           }} />
@@ -123,8 +123,8 @@ export default function Hero() {
           display: 'inline-flex',
           alignItems: 'center',
           gap: '8px',
-          background: 'rgba(255, 0, 255, 0.1)',
-          border: '1px solid rgba(255, 0, 255, 0.3)',
+          background: 'rgba(168, 85, 247, 0.1)',
+          border: '1px solid rgba(168, 85, 247, 0.3)',
           borderRadius: '50px',
           padding: '6px 18px',
           marginBottom: '28px',
@@ -135,8 +135,8 @@ export default function Hero() {
         }}>
           <span style={{
             width: '6px', height: '6px', borderRadius: '50%',
-            background: '#ff00ff',
-            boxShadow: '0 0 8px #ff00ff',
+            background: '#a855f7',
+            boxShadow: '0 0 8px #a855f7',
             animation: 'pulse-glow 2s infinite',
           }} />
           Powered by Modern AI Technology
@@ -167,7 +167,7 @@ export default function Hero() {
           fontWeight: 400,
         }}>
           Wir transformieren deine Vision in professionelle, virale Videoinhalte –{' '}
-          <span style={{ color: 'rgba(0, 217, 255, 0.9)', fontWeight: 500 }}>
+          <span style={{ color: 'rgba(34, 211, 238, 0.9)', fontWeight: 500 }}>
             powered by moderne KI-Technologie
           </span>{' '}
           und dramatischen Effekten.
@@ -203,14 +203,7 @@ export default function Hero() {
             { num: '5x', label: 'Schneller' },
           ].map((stat, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '28px',
-                fontWeight: 800,
-                background: 'linear-gradient(135deg, #ff00ff, #00d9ff)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>{stat.num}</div>
+              <div className="gradient-text" style={{ fontSize: '28px', fontWeight: 800 }}>{stat.num}</div>
               <div style={{
                 fontSize: '12px',
                 color: 'rgba(255,255,255,0.5)',
@@ -236,7 +229,7 @@ export default function Hero() {
           <div style={{
             width: '1px',
             height: '40px',
-            background: 'linear-gradient(to bottom, rgba(255,0,255,0.8), transparent)',
+            background: 'linear-gradient(to bottom, rgba(168,85,247,0.8), transparent)',
           }} className="animate-float2" />
         </div>
       </div>

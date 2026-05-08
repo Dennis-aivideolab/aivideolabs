@@ -7,398 +7,288 @@ export default function ChipBackground() {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
+    const onScroll = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
         const docH = document.documentElement.scrollHeight - window.innerHeight;
-        const p = docH > 0 ? Math.min(window.scrollY / docH, 1) : 0;
-        setScrollProgress(p);
+        setScrollProgress(docH > 0 ? Math.min(window.scrollY / docH, 1) : 0);
       });
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, []);
 
-  // As user scrolls 0→1:
-  // - chip scale grows: 0.55 → 1.1
-  // - circuit traces draw themselves (dashoffset)
-  // - outer traces appear progressively
-  // - opacity fades in then stays
+  const p = scrollProgress;
 
-  const scale = 0.55 + scrollProgress * 0.65;
-  const opacity = 0.06 + scrollProgress * 0.09; // max 0.15 – very subtle
-  const traceProgress = scrollProgress; // 0 → 1
+  // Scale: starts small, grows as user scrolls
+  const scale = 0.5 + p * 0.7;
+  // Slight 3-D tilt that relaxes to flat at full scroll
+  const rotX = 28 - p * 28;   // 28deg → 0deg
+  const rotZ = -6 + p * 6;    // -6deg → 0deg
+  // Opacity: fades in, stays readable
+  const opacity = 0.07 + p * 0.11;
 
-  // Total length of each path group for dashoffset
-  const LONG = 600;
-  const MED = 400;
-  const SHORT = 200;
+  // Stroke-dashoffset helper: returns offset for a trace of given length, appearing at delay (0-1)
+  const dash = (len: number, delay = 0, speed = 0.7) => {
+    const eff = Math.max(0, Math.min(1, (p - delay) / speed));
+    return len * (1 - eff);
+  };
 
-  const dashLong = (p: number, delay = 0) => {
-    const eff = Math.max(0, Math.min(1, (p - delay) / (1 - delay)));
-    return LONG - eff * LONG;
-  };
-  const dashMed = (p: number, delay = 0) => {
-    const eff = Math.max(0, Math.min(1, (p - delay) / (1 - delay)));
-    return MED - eff * MED;
-  };
-  const dashShort = (p: number, delay = 0) => {
-    const eff = Math.max(0, Math.min(1, (p - delay) / (1 - delay)));
-    return SHORT - eff * SHORT;
-  };
+  const C = '#22D3EE';   // cyan traces
+  const V = '#7C3AED';   // violet traces
+  const M = '#818CF8';   // indigo mid
 
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 0,
+      position: 'fixed', inset: 0, zIndex: 0,
       pointerEvents: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
+      perspective: '1200px',
     }}>
       <div style={{
-        transform: `scale(${scale})`,
-        opacity: opacity,
-        transition: 'transform 0.05s linear, opacity 0.05s linear',
+        transform: `scale(${scale}) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`,
+        opacity,
+        transition: 'transform 0.08s linear, opacity 0.08s linear',
         willChange: 'transform, opacity',
+        transformStyle: 'preserve-3d',
       }}>
-        <svg
-          width="900"
-          height="900"
-          viewBox="0 0 900 900"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg width="1000" height="1000" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="chipGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6B3FA0" />
-              <stop offset="50%" stopColor="#4F6FD4" />
-              <stop offset="100%" stopColor="#00D9FF" />
+            <linearGradient id="cg1" x1="0" y1="1000" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stopColor="#5B21B6"/>
+              <stop offset="50%"  stopColor="#3B82F6"/>
+              <stop offset="100%" stopColor="#22D3EE"/>
             </linearGradient>
-            <linearGradient id="chipGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#00D9FF" />
-              <stop offset="100%" stopColor="#6B3FA0" />
+            <linearGradient id="cg2" x1="1000" y1="0" x2="0" y2="1000" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stopColor="#22D3EE"/>
+              <stop offset="100%" stopColor="#7C3AED"/>
             </linearGradient>
+            {/* Glow filter */}
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="strongGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
           </defs>
 
-          {/* ═══════════════════════════════════════
-              CHIP BODY (center square)
-          ═══════════════════════════════════════ */}
-          <rect
-            x="300" y="300" width="300" height="300"
-            rx="12"
-            stroke="url(#chipGrad1)"
-            strokeWidth="2.5"
-            fill="none"
-            strokeDasharray={`${LONG}`}
-            strokeDashoffset={dashLong(traceProgress, 0)}
+          {/* ══════════════════════════════════════
+              CHIP BODY
+          ══════════════════════════════════════ */}
+          {/* Outer casing */}
+          <rect x="310" y="310" width="380" height="380" rx="16"
+            stroke="url(#cg1)" strokeWidth="3" fill="rgba(30,40,100,0.3)"
+            strokeDasharray="1520" strokeDashoffset={dash(1520, 0, 0.25)}
+            filter="url(#glow)"
           />
-          {/* Inner chip detail lines */}
-          <rect
-            x="320" y="320" width="260" height="260"
-            rx="8"
-            stroke="url(#chipGrad1)"
-            strokeWidth="1"
-            fill="none"
-            opacity="0.5"
-            strokeDasharray={`${MED}`}
-            strokeDashoffset={dashMed(traceProgress, 0.05)}
+          {/* Inner border */}
+          <rect x="330" y="330" width="340" height="340" rx="10"
+            stroke={M} strokeWidth="1.2" fill="rgba(20,30,80,0.2)" strokeOpacity="0.6"
+            strokeDasharray="1360" strokeDashoffset={dash(1360, 0.04, 0.25)}
+          />
+          {/* Die area */}
+          <rect x="380" y="380" width="240" height="240" rx="6"
+            stroke="url(#cg1)" strokeWidth="1.5" fill="rgba(40,50,120,0.15)"
+            strokeDasharray="960" strokeDashoffset={dash(960, 0.08, 0.25)}
           />
 
-          {/* Chip core label area */}
-          <rect
-            x="370" y="370" width="160" height="160"
-            rx="6"
-            stroke="url(#chipGrad1)"
-            strokeWidth="1.5"
-            fill="rgba(99,102,241,0.04)"
-            strokeDasharray={`${SHORT * 3}`}
-            strokeDashoffset={dashShort(traceProgress, 0.1) * 3}
-          />
-
-          {/* Internal grid lines (circuit pattern on chip) */}
-          {[390, 420, 450, 480, 510].map((x, i) => (
-            <line
-              key={`vg${i}`}
-              x1={x} y1="375" x2={x} y2="525"
-              stroke="url(#chipGrad1)"
-              strokeWidth="0.6"
-              opacity="0.3"
-              strokeDasharray="150"
-              strokeDashoffset={Math.max(0, 150 - Math.max(0, traceProgress - 0.1 - i * 0.03) / 0.6 * 150)}
+          {/* Internal grid – circuit layer */}
+          {[400,430,460,490,520,550,580].map((x,i) => (
+            <line key={`vg${i}`} x1={x} y1="385" x2={x} y2="615"
+              stroke={M} strokeWidth="0.5" strokeOpacity="0.25"
+              strokeDasharray="230" strokeDashoffset={dash(230, 0.1+i*0.015, 0.4)}
             />
           ))}
-          {[390, 420, 450, 480, 510].map((y, i) => (
-            <line
-              key={`hg${i}`}
-              x1="375" y1={y} x2="525" y2={y}
-              stroke="url(#chipGrad1)"
-              strokeWidth="0.6"
-              opacity="0.3"
-              strokeDasharray="150"
-              strokeDashoffset={Math.max(0, 150 - Math.max(0, traceProgress - 0.1 - i * 0.03) / 0.6 * 150)}
+          {[400,430,460,490,520,550,580].map((y,i) => (
+            <line key={`hg${i}`} x1="385" y1={y} x2="615" y2={y}
+              stroke={M} strokeWidth="0.5" strokeOpacity="0.25"
+              strokeDasharray="230" strokeDashoffset={dash(230, 0.1+i*0.015, 0.4)}
             />
           ))}
 
-          {/* ═══════════════════════════════════════
-              PINS – TOP SIDE (6 pins)
-          ═══════════════════════════════════════ */}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((x, i) => (
+          {/* Corner marks on die */}
+          {[[380,380],[620,380],[380,620],[620,620]].map(([x,y],i) => (
+            <g key={`cm${i}`} opacity={Math.min(1, Math.max(0,(p-0.06)*5))}>
+              <rect x={x-8} y={y-8} width={16} height={16} rx="3"
+                stroke="url(#cg1)" strokeWidth="2" fill="rgba(34,211,238,0.08)"/>
+            </g>
+          ))}
+
+          {/* Center processor mark */}
+          <rect x="460" y="460" width="80" height="80" rx="4"
+            stroke="url(#cg1)" strokeWidth="1.8" fill="rgba(34,211,238,0.05)"
+            strokeDasharray="320" strokeDashoffset={dash(320, 0.12, 0.3)}
+          />
+          <line x1="500" y1="462" x2="500" y2="538"
+            stroke={C} strokeWidth="0.8" strokeOpacity="0.4"
+            strokeDasharray="76" strokeDashoffset={dash(76, 0.14, 0.3)}
+          />
+          <line x1="462" y1="500" x2="538" y2="500"
+            stroke={C} strokeWidth="0.8" strokeOpacity="0.4"
+            strokeDasharray="76" strokeDashoffset={dash(76, 0.14, 0.3)}
+          />
+
+          {/* ══════════════════════════════════════
+              PINS – all 4 sides, 8 per side
+          ══════════════════════════════════════ */}
+          {/* TOP pins */}
+          {[340,366,392,418,444,470,496,522,548,574,600,626,652].map((x,i) => (
             <g key={`pt${i}`}>
-              {/* Pin body */}
-              <rect
-                x={x - 7} y="278" width="14" height="22"
-                rx="2"
-                stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none"
-                strokeDasharray="80"
-                strokeDashoffset={Math.max(0, 80 - Math.max(0, traceProgress - 0.05 - i * 0.02) / 0.7 * 80)}
+              <rect x={x-8} y={286} width={16} height={24} rx="2.5"
+                stroke="url(#cg1)" strokeWidth="1.8" fill="rgba(30,40,100,0.4)"
+                strokeDasharray="88" strokeDashoffset={dash(88, 0.05+i*0.012, 0.5)}
+              />
+              {/* Solder ball highlight */}
+              <circle cx={x} cy={293} r="2.5"
+                fill={C} fillOpacity={Math.max(0, (p-0.08)*4) * 0.7}
+              />
+            </g>
+          ))}
+          {/* BOTTOM pins */}
+          {[340,366,392,418,444,470,496,522,548,574,600,626,652].map((x,i) => (
+            <g key={`pb${i}`}>
+              <rect x={x-8} y={690} width={16} height={24} rx="2.5"
+                stroke="url(#cg2)" strokeWidth="1.8" fill="rgba(30,40,100,0.4)"
+                strokeDasharray="88" strokeDashoffset={dash(88, 0.05+i*0.012, 0.5)}
+              />
+              <circle cx={x} cy={705} r="2.5"
+                fill={V} fillOpacity={Math.max(0, (p-0.08)*4) * 0.7}
+              />
+            </g>
+          ))}
+          {/* LEFT pins */}
+          {[340,366,392,418,444,470,496,522,548,574,600,626,652].map((y,i) => (
+            <g key={`pl${i}`}>
+              <rect x={286} y={y-8} width={24} height={16} rx="2.5"
+                stroke="url(#cg1)" strokeWidth="1.8" fill="rgba(30,40,100,0.4)"
+                strokeDasharray="88" strokeDashoffset={dash(88, 0.05+i*0.012, 0.5)}
+              />
+              <circle cx={293} cy={y} r="2.5"
+                fill={M} fillOpacity={Math.max(0, (p-0.08)*4) * 0.7}
+              />
+            </g>
+          ))}
+          {/* RIGHT pins */}
+          {[340,366,392,418,444,470,496,522,548,574,600,626,652].map((y,i) => (
+            <g key={`pr${i}`}>
+              <rect x={690} y={y-8} width={24} height={16} rx="2.5"
+                stroke="url(#cg2)" strokeWidth="1.8" fill="rgba(30,40,100,0.4)"
+                strokeDasharray="88" strokeDashoffset={dash(88, 0.05+i*0.012, 0.5)}
+              />
+              <circle cx={705} cy={y} r="2.5"
+                fill={C} fillOpacity={Math.max(0, (p-0.08)*4) * 0.7}
               />
             </g>
           ))}
 
-          {/* PINS – BOTTOM SIDE */}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((x, i) => (
-            <rect
-              key={`pb${i}`}
-              x={x - 7} y="600" width="14" height="22"
-              rx="2"
-              stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none"
-              strokeDasharray="80"
-              strokeDashoffset={Math.max(0, 80 - Math.max(0, traceProgress - 0.05 - i * 0.02) / 0.7 * 80)}
-            />
-          ))}
-
-          {/* PINS – LEFT SIDE */}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((y, i) => (
-            <rect
-              key={`pl${i}`}
-              x="278" y={y - 7} width="22" height="14"
-              rx="2"
-              stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none"
-              strokeDasharray="80"
-              strokeDashoffset={Math.max(0, 80 - Math.max(0, traceProgress - 0.05 - i * 0.02) / 0.7 * 80)}
-            />
-          ))}
-
-          {/* PINS – RIGHT SIDE */}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((y, i) => (
-            <rect
-              key={`pr${i}`}
-              x="600" y={y - 7} width="22" height="14"
-              rx="2"
-              stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none"
-              strokeDasharray="80"
-              strokeDashoffset={Math.max(0, 80 - Math.max(0, traceProgress - 0.05 - i * 0.02) / 0.7 * 80)}
-            />
-          ))}
-
-          {/* ═══════════════════════════════════════
+          {/* ══════════════════════════════════════
               CIRCUIT TRACES – extending outward
-          ═══════════════════════════════════════ */}
+          ══════════════════════════════════════ */}
+          {/* TOP TRACES */}
+          <polyline points="340,286 340,220 180,220 180,130 100,130"     stroke="url(#cg1)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="700" strokeDashoffset={dash(700,0.18)}/>
+          <polyline points="392,286 392,200 560,200 560,110 680,110"     stroke="url(#cg1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="650" strokeDashoffset={dash(650,0.21)}/>
+          <polyline points="444,286 444,240 280,240 280,155 180,155"     stroke={M}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.23)}/>
+          <polyline points="496,286 496,180 640,180 640,100 780,100"     stroke="url(#cg2)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="700" strokeDashoffset={dash(700,0.20)}/>
+          <polyline points="548,286 548,220 730,220 730,130 850,130"     stroke="url(#cg2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="600" strokeDashoffset={dash(600,0.24)}/>
+          <polyline points="600,286 600,200 780,200 780,90 900,90"       stroke={C}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="600" strokeDashoffset={dash(600,0.26)}/>
+          <polyline points="652,286 652,170 860,170 860,80"              stroke="url(#cg2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.27)}/>
 
-          {/* TOP traces – going up then branching */}
-          {/* Trace from pin at x=330 → up → left branch */}
-          <polyline
-            points="330,278 330,220 180,220 180,150"
-            stroke="url(#chipGrad1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.15)}
-          />
-          <polyline
-            points="360,278 360,200 500,200 500,120 620,120"
-            stroke="url(#chipGrad1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.18)}
-          />
-          <polyline
-            points="420,278 420,240 260,240 260,160 180,160"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.2)}
-          />
-          <polyline
-            points="510,278 510,220 660,220 660,140 740,140"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.22)}
-          />
-          <polyline
-            points="450,278 450,200 550,200 550,100"
-            stroke="url(#chipGrad2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.17)}
-          />
-          <polyline
-            points="570,278 570,180 720,180 720,100 800,100"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.25)}
-          />
+          {/* BOTTOM TRACES */}
+          <polyline points="340,714 340,780 160,780 160,880 80,880"     stroke="url(#cg1)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="700" strokeDashoffset={dash(700,0.18)}/>
+          <polyline points="392,714 392,800 240,800 240,900"            stroke={M}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.22)}/>
+          <polyline points="444,714 444,760 560,760 560,880 680,880"    stroke="url(#cg1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="600" strokeDashoffset={dash(600,0.20)}/>
+          <polyline points="496,714 496,820 640,820 640,920"            stroke="url(#cg2)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.21)}/>
+          <polyline points="548,714 548,800 730,800 730,900"            stroke={C}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.24)}/>
+          <polyline points="600,714 600,780 800,780 800,900 900,900"    stroke="url(#cg2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="650" strokeDashoffset={dash(650,0.23)}/>
+          <polyline points="652,714 652,820 860,820 860,930"            stroke="url(#cg2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.26)}/>
 
-          {/* BOTTOM traces */}
-          <polyline
-            points="330,622 330,680 180,680 180,760"
-            stroke="url(#chipGrad1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.15)}
-          />
-          <polyline
-            points="390,622 390,700 260,700 260,780"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.2)}
-          />
-          <polyline
-            points="450,622 450,700 550,700 550,800"
-            stroke="url(#chipGrad2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.17)}
-          />
-          <polyline
-            points="510,622 510,680 660,680 660,760 740,760"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.22)}
-          />
-          <polyline
-            points="540,622 540,700 720,700 720,800"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.25)}
-          />
-          <polyline
-            points="570,622 570,720 800,720 800,800"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.27)}
-          />
+          {/* LEFT TRACES */}
+          <polyline points="286,340 220,340 220,170 130,170"            stroke="url(#cg1)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="600" strokeDashoffset={dash(600,0.18)}/>
+          <polyline points="286,392 200,392 200,250 110,250"            stroke={M}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="450" strokeDashoffset={dash(450,0.22)}/>
+          <polyline points="286,444 170,444 170,590 80,590"             stroke="url(#cg1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.20)}/>
+          <polyline points="286,496 140,496 140,660 60,660"             stroke={C}         strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="550" strokeDashoffset={dash(550,0.19)}/>
+          <polyline points="286,548 200,548 200,700 100,700"            stroke={M}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.23)}/>
+          <polyline points="286,600 160,600 160,760 80,760"             stroke="url(#cg1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="520" strokeDashoffset={dash(520,0.25)}/>
+          <polyline points="286,652 120,652 120,830 60,830"             stroke="url(#cg1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.27)}/>
 
-          {/* LEFT traces */}
-          <polyline
-            points="278,330 220,330 220,180 150,180"
-            stroke="url(#chipGrad1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.15)}
-          />
-          <polyline
-            points="278,390 200,390 200,260 120,260"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.2)}
-          />
-          <polyline
-            points="278,450 160,450 160,560 80,560"
-            stroke="url(#chipGrad1)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.17)}
-          />
-          <polyline
-            points="278,510 200,510 200,640 120,640"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.22)}
-          />
-          <polyline
-            points="278,540 180,540 180,680 100,680"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.25)}
-          />
-          <polyline
-            points="278,570 140,570 140,720 80,720"
-            stroke="url(#chipGrad1)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.27)}
-          />
+          {/* RIGHT TRACES */}
+          <polyline points="714,340 780,340 780,170 870,170"            stroke="url(#cg2)" strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="600" strokeDashoffset={dash(600,0.18)}/>
+          <polyline points="714,392 800,392 800,240 900,240"            stroke={C}         strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.22)}/>
+          <polyline points="714,444 830,444 830,320 920,320"            stroke="url(#cg2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.20)}/>
+          <polyline points="714,496 860,496 860,380 950,380"            stroke={C}         strokeWidth="2"   fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="520" strokeDashoffset={dash(520,0.19)}/>
+          <polyline points="714,548 800,548 800,680 920,680"            stroke="url(#cg2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="520" strokeDashoffset={dash(520,0.23)}/>
+          <polyline points="714,600 840,600 840,740 940,740"            stroke={M}         strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="520" strokeDashoffset={dash(520,0.25)}/>
+          <polyline points="714,652 830,652 830,820 930,820"            stroke="url(#cg2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="500" strokeDashoffset={dash(500,0.27)}/>
 
-          {/* RIGHT traces */}
-          <polyline
-            points="622,330 680,330 680,180 760,180"
-            stroke="url(#chipGrad2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.15)}
-          />
-          <polyline
-            points="622,390 700,390 700,240 800,240"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.2)}
-          />
-          <polyline
-            points="622,450 740,450 740,340 820,340"
-            stroke="url(#chipGrad2)" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={LONG} strokeDashoffset={dashLong(traceProgress, 0.17)}
-          />
-          <polyline
-            points="622,510 700,510 700,640 800,640"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.22)}
-          />
-          <polyline
-            points="622,540 760,540 760,680 840,680"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.25)}
-          />
-          <polyline
-            points="622,570 720,570 720,740 820,740"
-            stroke="url(#chipGrad2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
-            strokeDasharray={MED} strokeDashoffset={dashMed(traceProgress, 0.28)}
-          />
-
-          {/* ═══════════════════════════════════════
-              SOLDER PADS / VIA DOTS at trace endpoints
-          ═══════════════════════════════════════ */}
+          {/* ══════════════════════════════════════
+              SMD COMPONENTS on traces (resistors, caps)
+          ══════════════════════════════════════ */}
+          {/* Resistors: small rectangles on traces */}
           {[
-            [150, 180], [120, 260], [80, 560], [120, 640], [100, 680], [80, 720],
-            [760, 180], [800, 240], [820, 340], [800, 640], [840, 680], [820, 740],
-            [180, 150], [620, 120], [740, 140], [800, 100],
-            [180, 760], [260, 780], [550, 800], [740, 760], [720, 800], [800, 800],
-            [550, 100],
-          ].map(([cx, cy], i) => {
-            const p = Math.max(0, traceProgress - 0.35);
-            const localP = Math.min(1, p / 0.5 - i * 0.02);
-            return localP > 0 ? (
-              <circle
-                key={`via${i}`}
-                cx={cx} cy={cy} r="4"
-                fill="none"
-                stroke={i % 2 === 0 ? '#6B3FA0' : '#00D9FF'}
-                strokeWidth="1.5"
-                opacity={localP * 0.8}
-              />
-            ) : null;
-          })}
-
-          {/* Small square pads at pin connections */}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((x, i) => {
-            const p = Math.max(0, traceProgress - 0.1 - i * 0.015);
-            return p > 0 ? (
-              <g key={`padT${i}`}>
-                <rect x={x - 4} y="270" width="8" height="8" rx="1"
-                  fill={p > 0.5 ? 'rgba(0,217,255,0.15)' : 'none'}
-                  stroke="url(#chipGrad1)" strokeWidth="1" opacity={Math.min(1, p * 2)} />
-                <rect x={x - 4} y="622" width="8" height="8" rx="1"
-                  fill={p > 0.5 ? 'rgba(0,217,255,0.15)' : 'none'}
-                  stroke="url(#chipGrad1)" strokeWidth="1" opacity={Math.min(1, p * 2)} />
-              </g>
-            ) : null;
-          })}
-          {[330, 360, 390, 420, 450, 510, 540, 570].map((y, i) => {
-            const p = Math.max(0, traceProgress - 0.1 - i * 0.015);
-            return p > 0 ? (
-              <g key={`padL${i}`}>
-                <rect x="270" y={y - 4} width="8" height="8" rx="1"
-                  fill={p > 0.5 ? 'rgba(107,63,160,0.15)' : 'none'}
-                  stroke="url(#chipGrad2)" strokeWidth="1" opacity={Math.min(1, p * 2)} />
-                <rect x="622" y={y - 4} width="8" height="8" rx="1"
-                  fill={p > 0.5 ? 'rgba(107,63,160,0.15)' : 'none'}
-                  stroke="url(#chipGrad2)" strokeWidth="1" opacity={Math.min(1, p * 2)} />
-              </g>
-            ) : null;
-          })}
-
-          {/* Corner decorations */}
-          {[[300, 300], [600, 300], [300, 600], [600, 600]].map(([x, y], i) => {
-            const p = Math.max(0, traceProgress - 0.05);
-            const size = 14;
-            return (
-              <g key={`corner${i}`}>
-                <rect
-                  x={x - size / 2} y={y - size / 2}
-                  width={size} height={size}
-                  rx="3"
-                  stroke="url(#chipGrad1)"
-                  strokeWidth="2"
-                  fill="rgba(0,217,255,0.05)"
-                  opacity={Math.min(1, p * 3)}
+            [180,218],[560,198],[280,238],[640,178],
+            [180,778],[560,758],[640,818],
+            [218,340],[170,442],[200,546],[160,598],
+            [780,338],[830,442],[800,546],[840,598],
+          ].map(([x,y],i) => {
+            const show = Math.min(1, Math.max(0,(p-0.3)*4));
+            return show > 0 ? (
+              <g key={`r${i}`} opacity={show}>
+                <rect x={x-12} y={y-5} width={24} height={10} rx="2"
+                  stroke={i%2===0 ? C : V} strokeWidth="1.5"
+                  fill="rgba(30,40,100,0.5)"
+                />
+                <line x1={x-6} y1={y} x2={x+6} y2={y}
+                  stroke={i%2===0 ? C : V} strokeWidth="0.8" strokeOpacity="0.7"
                 />
               </g>
-            );
+            ) : null;
+          })}
+
+          {/* Capacitors: two parallel lines */}
+          {[
+            [340,218],[730,218],[860,168],
+            [340,780],[730,778],[860,818],
+            [218,496],[218,652],
+            [780,496],[780,652],
+          ].map(([x,y],i) => {
+            const show = Math.min(1, Math.max(0,(p-0.32)*4));
+            const horiz = i < 6;
+            return show > 0 ? (
+              <g key={`cap${i}`} opacity={show}>
+                {horiz ? (
+                  <>
+                    <line x1={x-2} y1={y-8} x2={x-2} y2={y+8} stroke={C} strokeWidth="2.5" strokeLinecap="round"/>
+                    <line x1={x+2} y1={y-8} x2={x+2} y2={y+8} stroke={C} strokeWidth="2.5" strokeLinecap="round"/>
+                  </>
+                ) : (
+                  <>
+                    <line x1={x-8} y1={y-2} x2={x+8} y2={y-2} stroke={V} strokeWidth="2.5" strokeLinecap="round"/>
+                    <line x1={x-8} y1={y+2} x2={x+8} y2={y+2} stroke={V} strokeWidth="2.5" strokeLinecap="round"/>
+                  </>
+                )}
+              </g>
+            ) : null;
+          })}
+
+          {/* ══════════════════════════════════════
+              VIA DOTS at trace endpoints
+          ══════════════════════════════════════ */}
+          {[
+            [100,130,C],[680,110,C],[180,155,M],[780,100,C],[850,130,C],[900,90,V],
+            [80,880,V],[240,900,M],[680,880,C],[640,920,V],[900,900,C],[860,930,V],
+            [130,170,C],[110,250,M],[80,590,C],[60,660,C],[100,700,M],[80,760,V],[60,830,V],
+            [870,170,C],[900,240,M],[920,320,V],[950,380,C],[920,680,V],[940,740,M],[930,820,C],
+          ].map(([cx,cy,col],i) => {
+            const show = Math.min(1, Math.max(0,(p-0.4)*5 - i*0.05));
+            return show > 0 ? (
+              <g key={`via${i}`} opacity={show} filter="url(#strongGlow)">
+                <circle cx={cx as number} cy={cy as number} r="5" fill="none" stroke={col as string} strokeWidth="2"/>
+                <circle cx={cx as number} cy={cy as number} r="2" fill={col as string}/>
+              </g>
+            ) : null;
           })}
         </svg>
       </div>

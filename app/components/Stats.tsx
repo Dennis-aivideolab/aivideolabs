@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 
 const stats = [
-  { value: 50, suffix: '+', label: 'Projekte', sublabel: 'erfolgreich abgeschlossen', color: '#ff00ff', icon: '🚀' },
-  { value: 98, suffix: '%', label: 'Zufriedenheit', sublabel: 'unserer Kunden', color: '#8a2be2', icon: '⭐' },
-  { value: 5, suffix: 'x', label: 'Schneller', sublabel: 'als klassische Produktion', color: '#00d9ff', icon: '⚡' },
+  { value: 50, suffix: '+', label: 'Projekte', sublabel: 'erfolgreich abgeschlossen', color: '#a855f7', icon: '🚀' },
+  { value: 98, suffix: '%', label: 'Zufriedenheit', sublabel: 'unserer Kunden', color: '#7c3aed', icon: '⭐' },
+  { value: 5, suffix: 'x', label: 'Schneller', sublabel: 'als klassische Produktion', color: '#22d3ee', icon: '⚡' },
   { value: 24, suffix: '/7', label: 'Support', sublabel: 'immer erreichbar', color: '#ff6b6b', icon: '🛡️' },
 ];
 
@@ -47,7 +47,7 @@ function StatCard({ stat, index, inView }: { stat: typeof stats[0]; index: numbe
         transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
         transform: hovered ? 'translateY(-5px)' : 'translateY(0)',
         boxShadow: hovered
-          ? `0 20px 50px rgba(${stat.color === '#ff00ff' ? '255,0,255' : stat.color === '#8a2be2' ? '138,43,226' : stat.color === '#00d9ff' ? '0,217,255' : '255,107,107'}, 0.2)`
+          ? `0 20px 50px rgba(${stat.color === '#a855f7' ? '255,0,255' : stat.color === '#7c3aed' ? '138,43,226' : stat.color === '#22d3ee' ? '0,217,255' : '255,107,107'}, 0.2)`
           : 'none',
         opacity: inView ? 1 : 0,
         animationDelay: `${index * 0.15}s`,
@@ -134,20 +134,20 @@ export default function Stats() {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(135deg, rgba(255,0,255,0.03) 0%, rgba(138,43,226,0.05) 50%, rgba(0,217,255,0.03) 100%)',
+        background: 'linear-gradient(135deg, rgba(168,85,247,0.03) 0%, rgba(124,58,237,0.05) 50%, rgba(34,211,238,0.03) 100%)',
         pointerEvents: 'none',
       }} />
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0,
         height: '1px',
-        background: 'linear-gradient(90deg, transparent, rgba(255,0,255,0.3), rgba(0,217,255,0.3), transparent)',
+        background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.3), rgba(34,211,238,0.3), transparent)',
       }} />
       <div style={{
         position: 'absolute',
         bottom: 0, left: 0, right: 0,
         height: '1px',
-        background: 'linear-gradient(90deg, transparent, rgba(138,43,226,0.3), transparent)',
+        background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent)',
       }} />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>

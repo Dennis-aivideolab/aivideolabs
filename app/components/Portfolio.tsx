@@ -9,9 +9,9 @@ const projects = [
     desc: '10M+ Views | KI-generierte Content-Serie',
     detail: 'Vollständig KI-gestützte Videoserie, die innerhalb von 2 Wochen viral ging.',
     tags: ['TikTok', 'AI', 'Viral'],
-    color: '#ff00ff',
-    glow: 'rgba(255, 0, 255, 0.4)',
-    bgGradient: 'linear-gradient(135deg, rgba(255,0,255,0.15) 0%, rgba(138,43,226,0.08) 100%)',
+    color: '#a855f7',
+    glow: 'rgba(168, 85, 247, 0.4)',
+    bgGradient: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(124,58,237,0.08) 100%)',
     icon: '▶',
     stat: '10M+',
     statLabel: 'Views',
@@ -23,9 +23,9 @@ const projects = [
     desc: '500+ Designs in 2 Wochen',
     detail: 'Automatisierte Design-Pipeline mit neuronalen Netzwerken für schnelle Asset-Erstellung.',
     tags: ['AI Art', 'Automation', 'Scale'],
-    color: '#8a2be2',
-    glow: 'rgba(138, 43, 226, 0.4)',
-    bgGradient: 'linear-gradient(135deg, rgba(138,43,226,0.15) 0%, rgba(0,217,255,0.06) 100%)',
+    color: '#7c3aed',
+    glow: 'rgba(124, 58, 237, 0.4)',
+    bgGradient: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(34,211,238,0.06) 100%)',
     icon: '✦',
     stat: '500+',
     statLabel: 'Designs',
@@ -37,9 +37,9 @@ const projects = [
     desc: '95+ Lighthouse Score',
     detail: 'Next.js Website mit perfekter Performance, SEO und modernem UI für ein Startup.',
     tags: ['Next.js', 'React', 'SEO'],
-    color: '#00d9ff',
-    glow: 'rgba(0, 217, 255, 0.4)',
-    bgGradient: 'linear-gradient(135deg, rgba(0,217,255,0.12) 0%, rgba(138,43,226,0.08) 100%)',
+    color: '#22d3ee',
+    glow: 'rgba(34, 211, 238, 0.4)',
+    bgGradient: 'linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(124,58,237,0.08) 100%)',
     icon: '◈',
     stat: '95+',
     statLabel: 'Score',
@@ -60,7 +60,7 @@ export default function Portfolio() {
       <div style={{
         position: 'absolute',
         top: 0, left: 0, right: 0, bottom: 0,
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(255,0,255,0.04) 0%, transparent 65%)',
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(168,85,247,0.04) 0%, transparent 65%)',
         pointerEvents: 'none',
       }} />
 
@@ -69,12 +69,12 @@ export default function Portfolio() {
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(0, 217, 255, 0.08)',
-            border: '1px solid rgba(0, 217, 255, 0.3)',
+            background: 'rgba(34, 211, 238, 0.08)',
+            border: '1px solid rgba(34, 211, 238, 0.3)',
             borderRadius: '50px',
             padding: '5px 16px',
             fontSize: '12px',
-            color: '#00d9ff',
+            color: '#22d3ee',
             letterSpacing: '2px',
             textTransform: 'uppercase',
             marginBottom: '16px',
@@ -194,7 +194,7 @@ export default function Portfolio() {
                   position: 'absolute',
                   top: '16px',
                   left: '16px',
-                  background: `rgba(${project.color === '#ff00ff' ? '255,0,255' : project.color === '#8a2be2' ? '138,43,226' : '0,217,255'}, 0.15)`,
+                  background: `rgba(${project.color === '#a855f7' ? '255,0,255' : project.color === '#7c3aed' ? '138,43,226' : '0,217,255'}, 0.15)`,
                   border: `1px solid ${project.glow}`,
                   borderRadius: '6px',
                   padding: '4px 10px',
@@ -260,7 +260,7 @@ export default function Portfolio() {
             paddingBottom: '2px',
             transition: 'color 0.3s ease',
           }}
-          onMouseEnter={e => (e.target as HTMLElement).style.color = '#00d9ff'}
+          onMouseEnter={e => (e.target as HTMLElement).style.color = '#22d3ee'}
           onMouseLeave={e => (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.5)'}>
             Alle Projekte anfragen →
           </a>

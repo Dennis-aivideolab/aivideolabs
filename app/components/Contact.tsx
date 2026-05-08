@@ -18,13 +18,13 @@ export default function Contact() {
     width: '100%',
     padding: '14px 18px',
     background: focused === name ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
-    border: `1px solid ${focused === name ? 'rgba(0,217,255,0.5)' : 'rgba(255,255,255,0.08)'}`,
+    border: `1px solid ${focused === name ? 'rgba(34,211,238,0.5)' : 'rgba(255,255,255,0.08)'}`,
     borderRadius: '12px',
     color: '#ffffff',
     fontSize: '15px',
     outline: 'none',
     transition: 'all 0.3s ease',
-    boxShadow: focused === name ? '0 0 0 3px rgba(0,217,255,0.08)' : 'none',
+    boxShadow: focused === name ? '0 0 0 3px rgba(34,211,238,0.08)' : 'none',
   });
 
   const services = ['Video Production', 'AI Design', 'Advertising Content', 'Digital Solutions', 'Anderes'];
@@ -40,7 +40,7 @@ export default function Contact() {
         position: 'absolute',
         bottom: 0, right: 0,
         width: '500px', height: '500px',
-        background: 'radial-gradient(circle, rgba(138,43,226,0.08) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)',
         filter: 'blur(40px)',
         pointerEvents: 'none',
       }} />
@@ -50,12 +50,12 @@ export default function Contact() {
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
           <div style={{
             display: 'inline-block',
-            background: 'rgba(255, 0, 255, 0.08)',
-            border: '1px solid rgba(255, 0, 255, 0.25)',
+            background: 'rgba(168, 85, 247, 0.08)',
+            border: '1px solid rgba(168, 85, 247, 0.25)',
             borderRadius: '50px',
             padding: '5px 16px',
             fontSize: '12px',
-            color: '#ff00ff',
+            color: '#a855f7',
             letterSpacing: '2px',
             textTransform: 'uppercase',
             marginBottom: '16px',
@@ -104,9 +104,9 @@ export default function Contact() {
                 Kontaktinfo
               </h3>
               {[
-                { icon: '📧', label: 'E-Mail', value: 'aivideolabs.ch@gmail.com', color: '#ff00ff' },
-                { icon: '🌐', label: 'Website', value: 'aivideolabs.ch', color: '#00d9ff' },
-                { icon: '📍', label: 'Standort', value: 'Schweiz 🇨🇭', color: '#8a2be2' },
+                { icon: '📧', label: 'E-Mail', value: 'aivideolabs.ch@gmail.com', color: '#a855f7' },
+                { icon: '🌐', label: 'Website', value: 'aivideolabs.ch', color: '#22d3ee' },
+                { icon: '📍', label: 'Standort', value: 'Schweiz 🇨🇭', color: '#7c3aed' },
                 { icon: '⏱️', label: 'Response', value: 'Innerhalb 24h', color: '#ff6b6b' },
               ].map((item, i) => (
                 <div key={i} style={{
@@ -120,7 +120,7 @@ export default function Contact() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    background: `rgba(${item.color === '#ff00ff' ? '255,0,255' : item.color === '#00d9ff' ? '0,217,255' : item.color === '#8a2be2' ? '138,43,226' : '255,107,107'}, 0.1)`,
+                    background: `rgba(${item.color === '#a855f7' ? '255,0,255' : item.color === '#22d3ee' ? '0,217,255' : item.color === '#7c3aed' ? '138,43,226' : '255,107,107'}, 0.1)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -143,8 +143,8 @@ export default function Contact() {
 
             {/* Social / availability */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(255,0,255,0.08), rgba(138,43,226,0.06))',
-              border: '1px solid rgba(255,0,255,0.15)',
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(124,58,237,0.06))',
+              border: '1px solid rgba(168,85,247,0.15)',
               borderRadius: '16px',
               padding: '20px 24px',
               display: 'flex',
