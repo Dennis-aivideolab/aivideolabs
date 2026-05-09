@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getT, Lang } from '@/lib/i18n';
+import { trackEvent } from './GoogleAnalytics';
 
 export default function Navbar() {
   const params = useParams();
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -23,7 +25,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const close = () => setLangOpen(false);
+    const close = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
     document.addEventListener('click', close);
     return () => document.removeEventListener('click', close);
   }, []);
@@ -79,7 +85,7 @@ export default function Navbar() {
         ))}
 
         {/* Language Switcher */}
-        <div style={{ position: 'relative', marginLeft: '4px' }} onClick={e => e.stopPropagation()}>
+        <div ref={langRef} style={{ position: 'relative', marginLeft: '4px' }}>
           <button
             onClick={() => setLangOpen(!langOpen)}
             style={{
@@ -103,7 +109,7 @@ export default function Navbar() {
             }}>
               {langOptions.map(opt => (
                 <Link key={opt.code} href={`/${opt.code}`}
-                  onClick={() => setLangOpen(false)}
+                  onClick={() => { setLangOpen(false); trackEvent('language_change', { language: opt.code }); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '10px',
                     padding: '11px 16px', textDecoration: 'none',

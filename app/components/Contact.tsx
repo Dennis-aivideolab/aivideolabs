@@ -33,7 +33,7 @@ export default function Contact() {
       if (res.ok) {
         setStatus('sent');
         setForm({ name: '', email: '', phone: '', service: '', message: '' });
-        trackEvent('form_submit', 'contact', lang);
+        trackEvent('form_submit', { form_name: 'contact_form' });
         setTimeout(() => setStatus('idle'), 5000);
       } else { setStatus('error'); }
     } catch { setStatus('error'); }

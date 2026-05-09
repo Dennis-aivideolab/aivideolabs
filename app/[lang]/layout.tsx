@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       type: 'website',
       locale: localeMap[lang] ?? 'de_DE',
       url: `https://aivideolabs.ch/${lang}`,
+      images: [{ url: 'https://aivideolabs.ch/og-image.jpg', width: 1200, height: 630, alt: 'VideoLabs AI' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.meta.title,
+      description: t.meta.description,
+      images: ['https://aivideolabs.ch/og-image.jpg'],
     },
     alternates: {
       canonical: `https://aivideolabs.ch/${lang}`,

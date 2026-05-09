@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getT } from '@/lib/i18n';
+import { trackEvent } from './GoogleAnalytics';
 
 const VIDEO_SRC = '/videos/magnific_futuristic-holographic-lo_2948754529.mp4';
 
@@ -125,8 +126,8 @@ export default function Hero() {
 
           {/* Buttons */}
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '48px' }}>
-            <a href={`/${lang}#contact`} className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>{t.btn1}</a>
-            <a href={`/${lang}#portfolio`} className="btn-secondary" style={{ textDecoration: 'none', display: 'inline-block' }}>{t.btn2}</a>
+            <a href={`/${lang}#contact`} className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }} onClick={() => trackEvent('anfrage_klick')}>{t.btn1}</a>
+            <a href={`/${lang}#portfolio`} className="btn-secondary" style={{ textDecoration: 'none', display: 'inline-block' }} onClick={() => trackEvent('portfolio_klick')}>{t.btn2}</a>
           </div>
 
           {/* Stats */}

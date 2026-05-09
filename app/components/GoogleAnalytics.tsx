@@ -38,8 +38,8 @@ export default function GoogleAnalytics() {
   );
 }
 
-export function trackEvent(action: string, category: string, label?: string) {
+export function trackEvent(action: string, params?: Record<string, string | number | boolean>) {
   if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', action, { event_category: category, event_label: label });
+    (window as any).gtag('event', action, params);
   }
 }
