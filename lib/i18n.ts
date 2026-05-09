@@ -27,7 +27,7 @@ const de = {
     badge: 'Unsere Arbeit', title: 'Portfolio',
     items: [
       { tag: 'Video', title: 'Kfz Werkstatt Schürmann und Kruse', desc: '10 Sekunden Content für Social Media', color: '#ff00ff', tags: ['AI Design', 'Video Production'], video: '/Werbeclip.mp4' },
-      { tag: 'Design', title: 'AI Asset Pipeline', desc: '500+ Designs in 2 Wochen', color: '#06b6d4' },
+      { tag: 'Design', title: 'AI Asset Pipeline', desc: '10 Sekunden Content für Social Media', color: '#ff00ff', tags: ['AI Design'], video: '/AI-Assets.mp4' },
       { tag: 'Website', title: 'High-Performance Web', desc: '95+ Lighthouse Score', color: '#a855f7' },
     ],
   },
@@ -112,7 +112,7 @@ const ch: typeof de = {
     badge: 'Üseri Arbet', title: 'Portfolio',
     items: [
       { tag: 'Video', title: 'Kfz Werkstatt Schürmann und Kruse', desc: '10 Sekunde Content für Social Media', color: '#ff00ff', tags: ['AI Design', 'Video Production'], video: '/Werbeclip.mp4' },
-      { tag: 'Design', title: 'AI Asset Pipeline', desc: '500+ Designs in 2 Wuche', color: '#06b6d4' },
+      { tag: 'Design', title: 'AI Asset Pipeline', desc: '10 Sekunde Content für Social Media', color: '#ff00ff', tags: ['AI Design'], video: '/AI-Assets.mp4' },
       { tag: 'Website', title: 'High-Performance Web', desc: '95+ Lighthouse Score', color: '#a855f7' },
     ],
   },
@@ -192,7 +192,7 @@ const en: typeof de = {
     badge: 'Our Work', title: 'Portfolio',
     items: [
       { tag: 'Video', title: 'Kfz Werkstatt Schürmann und Kruse', desc: '10 Seconds Content for Social Media', color: '#ff00ff', tags: ['AI Design', 'Video Production'], video: '/Werbeclip.mp4' },
-      { tag: 'Design', title: 'AI Asset Pipeline', desc: '500+ Designs in 2 weeks', color: '#06b6d4' },
+      { tag: 'Design', title: 'AI Asset Pipeline', desc: '10 Seconds Content for Social Media', color: '#ff00ff', tags: ['AI Design'], video: '/AI-Assets.mp4' },
       { tag: 'Website', title: 'High-Performance Web', desc: '95+ Lighthouse Score', color: '#a855f7' },
     ],
   },

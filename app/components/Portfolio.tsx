@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getT } from '@/lib/i18n';
 
@@ -14,7 +14,6 @@ const rgbs: Record<string, string> = { '#ff00ff': '255,0,255', '#7c3aed': '138,4
 
 export default function Portfolio() {
   const [hovered, setHovered] = useState<number | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const params = useParams();
   const lang = (params?.lang as string) || 'de';
   const t = getT(lang).portfolio;
@@ -41,7 +40,7 @@ export default function Portfolio() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
           {t.items.map((project: any, i: number) => {
             const m = meta[i];
-            const isVideo = i === 0 && project.video;
+            const isVideo = !!project.video;
 
             return (
               <div key={i}
@@ -59,14 +58,13 @@ export default function Portfolio() {
                   /* ── Video Card ── */
                   <div style={{ position: 'relative', background: '#000', overflow: 'hidden' }}>
                     <video
-                      ref={videoRef}
                       src={project.video}
                       loop
                       controls
                       playsInline
                       style={{
                         width: '100%', display: 'block', maxHeight: '340px', objectFit: 'cover',
-                        boxShadow: hovered === 0 ? '0 0 50px rgba(255,0,255,0.5)' : '0 0 30px rgba(255,0,255,0.3)',
+                        boxShadow: hovered === i ? '0 0 50px rgba(255,0,255,0.5)' : '0 0 30px rgba(255,0,255,0.3)',
                         transition: 'box-shadow 0.4s ease',
                       }}
                     />
