@@ -2,7 +2,7 @@ export type Lang = 'de' | 'ch' | 'en';
 
 const de = {
   nav: {
-    home: 'Home', services: 'Services', portfolio: 'Portfolio', contact: 'Kontakt', cta: 'Anfragen →',
+    home: 'Home', services: 'Services', portfolio: 'Portfolio', referenzen: 'Referenzen', contact: 'Kontakt', cta: 'Anfragen →',
     lang: { de: 'Deutsch', ch: 'Schweizerdeutsch', en: 'English' },
   },
   hero: {
@@ -81,6 +81,16 @@ const de = {
     marketing: 'Marketing Cookies', marketingDesc: 'Personalisierte Werbung und Cross-Site Tracking.',
     save: 'Einstellungen speichern', alwaysActive: 'Immer aktiv',
     privacyLink: 'Datenschutzerklärung',
+  },
+  referenzen: {
+    badge: '✦ Unsere Kunden',
+    title: 'Vertraute',
+    titleGrad: 'Partner',
+    sub: 'Unternehmen, die auf unsere Arbeit vertrauen.',
+    show: 'Video ansehen',
+    hide: 'Schließen',
+    noVideo: 'Kein Video verfügbar',
+    cta: 'Jetzt Projekt anfragen ✦',
   },
   meta: { title: 'AI Video Labs – Kreative AI-gestützte Videoinhalte', description: 'Professionelle Video Production, AI Design & Digital Solutions aus der Schweiz.' },
 };
@@ -165,11 +175,21 @@ const ch: typeof de = {
     marketingDesc: 'Personalisierti Werbig und Cross-Site Tracking.',
     save: 'Iistellige speichere',
   },
+  referenzen: {
+    badge: '✦ Üseri Kunde',
+    title: 'Vertraueti',
+    titleGrad: 'Partner',
+    sub: 'Unternäh, wo uf üseri Arbet vertraue.',
+    show: 'Video aaluege',
+    hide: 'Schliesse',
+    noVideo: 'Ke Video verfüegbar',
+    cta: 'Jetzt Projekt afrage ✦',
+  },
   meta: { title: 'AI Video Labs – Kreative KI-gestützte Videoinhalte', description: 'Professionelli Video Production, AI Design & Digital Solutions us de Schwiiz.' },
 };
 
 const en: typeof de = {
-  nav: { home: 'Home', services: 'Services', portfolio: 'Portfolio', contact: 'Contact', cta: 'Get in Touch →', lang: de.nav.lang },
+  nav: { home: 'Home', services: 'Services', portfolio: 'Portfolio', referenzen: 'References', contact: 'Contact', cta: 'Get in Touch →', lang: de.nav.lang },
   hero: {
     badge: 'Powered by Modern AI Technology',
     h1: 'Creative', h2: 'AI-Powered', h3: 'Video Content',
@@ -246,6 +266,16 @@ const en: typeof de = {
     marketing: 'Marketing Cookies', marketingDesc: 'Personalized advertising and cross-site tracking.',
     save: 'Save Settings', alwaysActive: 'Always Active',
     privacyLink: 'Privacy Policy',
+  },
+  referenzen: {
+    badge: '✦ Our Clients',
+    title: 'Trusted',
+    titleGrad: 'Partners',
+    sub: 'Companies that trust our work.',
+    show: 'Watch Video',
+    hide: 'Close',
+    noVideo: 'No video available',
+    cta: 'Start a Project ✦',
   },
   meta: { title: 'AI Video Labs – Creative AI-Powered Video Content', description: 'Professional Video Production, AI Design & Digital Solutions from Switzerland.' },
 };

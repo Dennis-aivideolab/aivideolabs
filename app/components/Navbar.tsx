@@ -38,6 +38,7 @@ export default function Navbar() {
     { label: t.home, href: `/${lang}#home` },
     { label: t.services, href: `/${lang}#services` },
     { label: t.portfolio, href: `/${lang}#portfolio` },
+    { label: t.referenzen, href: `/${lang}/referenzen` },
     { label: t.contact, href: `/${lang}#contact` },
   ];
 
