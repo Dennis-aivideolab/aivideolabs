@@ -7,7 +7,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { getT } from '@/lib/i18n';
 
-const clients = [
+const clients: { id: string; name: string; logo: string; video: string | null; image?: string; tag: string; color: string }[] = [
   {
     id: 'hk-holz',
     name: 'HK Holz',
@@ -37,6 +37,7 @@ const clients = [
     name: 'Texseller',
     logo: '/logos/Texseller.PNG',
     video: null,
+    image: '/logos/TexsellerPNG.PNG',
     tag: 'AI Design',
     color: '#7c3aed',
   },
@@ -143,6 +144,16 @@ export default function ReferenzenPage() {
                     }}
                     onMouseEnter={e => { (e.currentTarget as HTMLVideoElement).style.opacity = '0.65'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLVideoElement).style.opacity = '0.35'; }}
+                  />
+                )}
+
+                {/* Image background (for clients without video) */}
+                {!client.video && client.image && (
+                  <Image
+                    src={client.image}
+                    alt={client.name}
+                    fill
+                    style={{ objectFit: 'cover', opacity: 0.4 }}
                   />
                 )}
 
