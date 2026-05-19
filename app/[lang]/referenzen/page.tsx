@@ -85,11 +85,11 @@ export default function ReferenzenPage() {
           </p>
         </section>
 
-        {/* Logo Grid */}
-        <section style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px 80px' }}>
+        {/* Card Grid */}
+        <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 80px' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '24px',
           }}>
             {clients.map(client => (
@@ -97,71 +97,121 @@ export default function ReferenzenPage() {
                 key={client.id}
                 onClick={() => setActive(active === client.id ? null : client.id)}
                 style={{
-                  background: active === client.id
-                    ? `rgba(${client.color === '#22d3ee' ? '34,211,238' : client.color === '#ff00ff' ? '255,0,255' : '168,85,247'},0.1)`
-                    : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${active === client.id ? client.color : 'rgba(255,255,255,0.08)'}`,
+                  position: 'relative',
+                  overflow: 'hidden',
                   borderRadius: '20px',
-                  padding: '32px 24px',
+                  border: `1px solid ${active === client.id ? client.color : 'rgba(255,255,255,0.08)'}`,
                   cursor: 'pointer',
+                  padding: 0,
+                  background: '#0a0e27',
+                  boxShadow: active === client.id ? `0 0 40px ${client.color}50` : 'none',
                   transition: 'all 0.3s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '16px',
-                  boxShadow: active === client.id ? `0 0 30px ${client.color}40` : 'none',
+                  aspectRatio: '16/10',
+                  display: 'block',
                 }}
                 onMouseEnter={e => {
+                  const vid = (e.currentTarget as HTMLElement).querySelector('video') as HTMLVideoElement | null;
+                  if (vid) vid.play();
                   if (active !== client.id) {
-                    (e.currentTarget as HTMLElement).style.border = `1px solid rgba(255,255,255,0.2)`;
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+                    (e.currentTarget as HTMLElement).style.border = `1px solid ${client.color}80`;
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 30px ${client.color}30`;
                   }
                 }}
                 onMouseLeave={e => {
+                  const vid = (e.currentTarget as HTMLElement).querySelector('video') as HTMLVideoElement | null;
+                  if (vid) { vid.pause(); vid.currentTime = 0; }
                   if (active !== client.id) {
                     (e.currentTarget as HTMLElement).style.border = '1px solid rgba(255,255,255,0.08)';
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
                   }
                 }}
               >
-                <div style={{ width: '120px', height: '80px', position: 'relative', filter: 'brightness(0) invert(1)' }}>
-                  <Image src={client.logo} alt={client.name} fill style={{ objectFit: 'contain' }} />
-                </div>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  {client.tag}
-                </span>
-                <span style={{
-                  fontSize: '12px', padding: '4px 12px', borderRadius: '50px',
-                  background: active === client.id ? client.color + '30' : 'rgba(255,255,255,0.05)',
-                  color: active === client.id ? client.color : 'rgba(255,255,255,0.4)',
-                  border: `1px solid ${active === client.id ? client.color + '60' : 'rgba(255,255,255,0.08)'}`,
-                  transition: 'all 0.3s',
+                {/* Video background */}
+                {client.video && (
+                  <video
+                    src={client.video}
+                    muted
+                    playsInline
+                    loop
+                    preload="metadata"
+                    style={{
+                      position: 'absolute', inset: 0,
+                      width: '100%', height: '100%',
+                      objectFit: 'cover',
+                      opacity: 0.35,
+                      transition: 'opacity 0.4s ease',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLVideoElement).style.opacity = '0.65'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLVideoElement).style.opacity = '0.35'; }}
+                  />
+                )}
+
+                {/* Gradient overlay */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to top, rgba(10,14,39,0.95) 0%, rgba(10,14,39,0.4) 50%, rgba(10,14,39,0.1) 100%)',
+                  pointerEvents: 'none',
+                }} />
+
+                {/* Content */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  gap: '12px', padding: '24px',
                 }}>
-                  {active === client.id ? t.hide : t.show}
-                </span>
+                  <div style={{ width: '130px', height: '70px', position: 'relative', filter: 'brightness(0) invert(1)', flexShrink: 0 }}>
+                    <Image src={client.logo} alt={client.name} fill style={{ objectFit: 'contain' }} />
+                  </div>
+                  <span style={{
+                    color: 'rgba(255,255,255,0.5)', fontSize: '11px',
+                    fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  }}>
+                    {client.tag}
+                  </span>
+                </div>
+
+                {/* Bottom label */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '12px 20px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}>
+                  <span style={{ color: '#fff', fontSize: '13px', fontWeight: 700 }}>{client.name}</span>
+                  <span style={{
+                    fontSize: '11px', padding: '3px 10px', borderRadius: '50px',
+                    background: active === client.id ? client.color + '40' : 'rgba(255,255,255,0.1)',
+                    color: active === client.id ? client.color : 'rgba(255,255,255,0.6)',
+                    border: `1px solid ${active === client.id ? client.color + '80' : 'rgba(255,255,255,0.15)'}`,
+                    transition: 'all 0.3s',
+                    backdropFilter: 'blur(8px)',
+                  }}>
+                    {active === client.id ? t.hide : t.show}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Detail View */}
+        {/* Detail View — fullscreen video player */}
         {activeClient && (
           <section style={{
-            maxWidth: '900px', margin: '0 auto 80px', padding: '0 24px',
+            maxWidth: '960px', margin: '0 auto 80px', padding: '0 24px',
             animation: 'fadeIn 0.3s ease',
           }}>
             <div style={{
               background: 'rgba(255,255,255,0.03)',
               border: `1px solid ${activeClient.color}50`,
-              borderRadius: '24px', padding: '40px',
+              borderRadius: '24px', padding: '32px',
               boxShadow: `0 0 60px ${activeClient.color}20`,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px', flexWrap: 'wrap' }}>
-                <div style={{ width: '100px', height: '64px', position: 'relative', filter: 'brightness(0) invert(1)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                <div style={{ width: '90px', height: '56px', position: 'relative', filter: 'brightness(0) invert(1)', flexShrink: 0 }}>
                   <Image src={activeClient.logo} alt={activeClient.name} fill style={{ objectFit: 'contain' }} />
                 </div>
                 <div>
-                  <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 800, margin: '0 0 4px' }}>{activeClient.name}</h2>
+                  <h2 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, margin: '0 0 4px' }}>{activeClient.name}</h2>
                   <span style={{
                     display: 'inline-block', padding: '3px 12px', borderRadius: '50px',
                     background: activeClient.color + '20', border: `1px solid ${activeClient.color}50`,
@@ -175,16 +225,17 @@ export default function ReferenzenPage() {
                   src={activeClient.video}
                   controls
                   playsInline
+                  autoPlay
                   style={{
-                    width: '100%', borderRadius: '16px',
+                    width: '100%', borderRadius: '14px',
                     border: `1px solid ${activeClient.color}30`,
                     boxShadow: `0 0 40px ${activeClient.color}20`,
-                    maxHeight: '520px', background: '#000',
+                    maxHeight: '540px', background: '#000',
                   }}
                 />
               ) : (
                 <div style={{
-                  width: '100%', height: '200px', borderRadius: '16px',
+                  width: '100%', height: '180px', borderRadius: '14px',
                   border: '1px solid rgba(255,255,255,0.08)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'rgba(255,255,255,0.3)', fontSize: '15px',
@@ -194,7 +245,7 @@ export default function ReferenzenPage() {
                 </div>
               )}
 
-              <div style={{ marginTop: '32px', textAlign: 'center' }}>
+              <div style={{ marginTop: '28px', textAlign: 'center' }}>
                 <a href={`/${lang}#contact`} style={{
                   display: 'inline-block',
                   background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
