@@ -290,47 +290,32 @@ export default function ThreeScene() {
 
         collectMaterials(iphoneNode, phoneMaterials);
 
-        // Find the phone screen mesh by material name
-        // iPhone 15 Pro Max model by polyman Studio: screen is typically
-        // a glass/OLED-named material or the glossiest dark mesh
-        iphoneNode.traverse(obj => {
-          if (!(obj instanceof THREE.Mesh) || phoneScreenMat) return;
-          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-          const n = (mat?.name ?? '').toLowerCase();
-          const isScreen =
-            n.includes('screen') || n.includes('oled') || n.includes('display') ||
-            (n.includes('glass') && !n.includes('back') && !n.includes('camera') && !n.includes('lens'));
-          if (isScreen) {
-            const scrMat = new THREE.MeshBasicMaterial({
-              map: phoneVideoTex, transparent: true, opacity: 0,
-              side: THREE.DoubleSide,
-            });
-            (obj as THREE.Mesh).material = scrMat;
-            phoneScreenMat = scrMat;
-            phoneMaterials.push(scrMat);
-            void phoneVideoEl.play().catch(() => {});
-          }
-        });
-
-        // Fallback: pick the darkest + glossiest MeshStandardMaterial
-        if (!phoneScreenMat) {
-          let bestRoughness = 1;
-          let bestMesh: THREE.Mesh | null = null;
+        // Detect screen: all material names are obfuscated, so use geometry.
+        // After fitAndCenter with rotY=π the screen faces +Z (toward camera).
+        // The screen panel is the largest flat mesh whose world-space center is on the +Z side.
+        phone.updateMatrixWorld(true);
+        {
+          let bestArea = 0;
+          let screenMesh: THREE.Mesh | null = null;
           iphoneNode.traverse(obj => {
             if (!(obj instanceof THREE.Mesh)) return;
-            const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-            if (mat instanceof THREE.MeshStandardMaterial) {
-              if (mat.roughness < bestRoughness) {
-                bestRoughness = mat.roughness;
-                bestMesh = obj as THREE.Mesh;
-              }
-            }
+            const geo = (obj as THREE.Mesh).geometry;
+            if (!geo.boundingBox) geo.computeBoundingBox();
+            const bb = geo.boundingBox!;
+            const size = new THREE.Vector3();
+            bb.getSize(size);
+            const center = new THREE.Vector3();
+            bb.getCenter(center);
+            obj.localToWorld(center);            // world coords
+            if (center.z <= 0) return;           // back-face mesh — skip
+            const area = size.x * size.y;        // face area in local geometry space
+            if (area > bestArea) { bestArea = area; screenMesh = obj as THREE.Mesh; }
           });
-          if (bestMesh) {
+          if (screenMesh) {
             const scrMat = new THREE.MeshBasicMaterial({
-              map: phoneVideoTex, transparent: true, opacity: 0,
+              map: phoneVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
             });
-            (bestMesh as THREE.Mesh).material = scrMat;
+            (screenMesh as THREE.Mesh).material = scrMat;
             phoneScreenMat = scrMat;
             phoneMaterials.push(scrMat);
             void phoneVideoEl.play().catch(() => {});
