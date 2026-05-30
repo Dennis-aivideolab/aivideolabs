@@ -27,6 +27,7 @@ export default function Footer() {
     <footer style={{
       padding: 'clamp(48px,6vw,80px) clamp(20px,6vw,90px) 32px',
       borderTop: '1px solid rgba(220,228,238,0.08)', position: 'relative', overflow: 'hidden',
+      background: 'var(--bg)',
     }}>
       <div style={{
         position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',

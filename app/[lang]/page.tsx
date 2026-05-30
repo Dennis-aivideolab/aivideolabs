@@ -15,7 +15,7 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
     <>
       <GoogleAnalytics />
       <ThreeScene />
-      <main id="contact" style={{ position: 'relative', zIndex: 10 }}>
+      <main id="contact" style={{ position: 'relative', zIndex: 15, background: 'var(--bg)' }}>
         <Contact />
         <Footer />
       </main>

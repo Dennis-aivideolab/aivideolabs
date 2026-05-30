@@ -46,7 +46,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="kontakt" style={{ padding: 'clamp(80px,10vw,140px) clamp(20px,6vw,90px)', position: 'relative', overflow: 'hidden' }}>
+    <section id="kontakt" style={{ padding: 'clamp(80px,10vw,140px) clamp(20px,6vw,90px)', position: 'relative', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* ambient glow */}
       <div style={{
         position: 'absolute', bottom: 0, right: 0, width: 500, height: 500,
