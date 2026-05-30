@@ -290,26 +290,27 @@ export default function ThreeScene() {
 
         collectMaterials(iphoneNode, phoneMaterials);
 
-        // Detect screen: all material names are obfuscated, so use geometry.
+        // Detect screen: material names are obfuscated random strings, so use geometry.
         // After fitAndCenter with rotY=π the screen faces +Z (toward camera).
-        // The screen panel is the largest flat mesh whose world-space center is on the +Z side.
+        // Strategy: compute each mesh's world bounding box; keep only front-face meshes
+        // (center.z > 0), then pick the one with the highest "flatness score":
+        //   score = XY-area / (Z-thickness + ε)
+        // The screen panel is large and very thin → wins clearly over the body shell.
         phone.updateMatrixWorld(true);
         {
-          let bestArea = 0;
+          let bestScore = 0;
           let screenMesh: THREE.Mesh | null = null;
           iphoneNode.traverse(obj => {
             if (!(obj instanceof THREE.Mesh)) return;
-            const geo = (obj as THREE.Mesh).geometry;
-            if (!geo.boundingBox) geo.computeBoundingBox();
-            const bb = geo.boundingBox!;
+            const box = new THREE.Box3().setFromObject(obj);  // world-space box
             const size = new THREE.Vector3();
-            bb.getSize(size);
+            box.getSize(size);
             const center = new THREE.Vector3();
-            bb.getCenter(center);
-            obj.localToWorld(center);            // world coords
-            if (center.z <= 0) return;           // back-face mesh — skip
-            const area = size.x * size.y;        // face area in local geometry space
-            if (area > bestArea) { bestArea = area; screenMesh = obj as THREE.Mesh; }
+            box.getCenter(center);
+            if (center.z <= 0) return;                        // back-face — skip
+            const area = size.x * size.y;
+            const score = area / (size.z + 0.0001);           // flat thin panels win
+            if (score > bestScore) { bestScore = score; screenMesh = obj as THREE.Mesh; }
           });
           if (screenMesh) {
             const scrMat = new THREE.MeshBasicMaterial({
