@@ -496,16 +496,13 @@ export default function ThreeScene() {
       const macbookNode = gltf.scene.getObjectByName('macbook');
       if (macbookNode) {
         // Original model: rubber feet +Z, Apple logo +Y, screen –Y, keyboard –Z.
-        // We need screen → +Z (camera), keyboard → +Y (up), feet → –Y (below).
-        // Single-axis rotations can't satisfy all three simultaneously, so we combine:
-        //   Rz(π)  ×  Rx(–π/2)  →  transform: (x,y,z) → (–x, –z, –y)
-        //   rubber feet (+Z) → –Y  ✓   keyboard (–Z) → +Y  ✓
-        //   Apple logo (+Y) → –Z   ✓   screen   (–Y) → +Z  ✓  (faces camera when closed)
+        // Model uses Y-up: rubber feet –Y, Apple logo +Y, keyboard face +Y (base interior).
+        // Testing with no orientGroup rotation: MacBook sits "natural" on its –Y axis,
+        // screen opens toward +Z (camera) as lid rotates.
         fitAndCenter(macbookNode, 'x', 3.5, 0);
 
         const orientGroup = new THREE.Group();
-        orientGroup.rotation.x = -Math.PI / 2;  // step 1: Rx(–90°)
-        orientGroup.rotation.z =  Math.PI;       // step 2: Rz(180°) — screen now faces +Z ✓
+        // orientGroup.rotation.x = 0  (identity — screen opens toward camera)
         orientGroup.add(macbookNode);
 
         laptop = new THREE.Group();
@@ -615,10 +612,9 @@ export default function ThreeScene() {
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
     const LID_CLOSED = 0.0;
-    // With the new orientGroup (Rx–90 + Rz180), lid opens in –X direction.
-    // At θ=–0.25π the screen normal in world space is (0, –0.707, +0.707):
-    // visible from camera below-ish and in front.
-    const LID_OPEN   = -Math.PI * 0.25;
+    // orientGroup = Rx(–π/2): screen starts at +Z (camera), rotates toward +Y as lid opens.
+    // At θ=–0.30π screen normal ≈ (0, +0.81, +0.59) — visible from camera above.
+    const LID_OPEN   = -Math.PI * 0.30;
 
     function tick() {
       const elapsed = clock.getElapsedTime();
@@ -678,7 +674,7 @@ export default function ThreeScene() {
       } else if (p < 0.45) {
         camTarget.set(0, 0, lerp(13, 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        camTarget.set(0, -0.4, 7.5); lookY = 0.6;  // camera slightly below, look at screen face
+        camTarget.set(0, 1.0, 7.5); lookY = 0.0;  // camera above, looking down at open screen
       } else {
         camTarget.set(0, 0, 11);
       }
@@ -739,7 +735,7 @@ export default function ThreeScene() {
       phoneVideoEl.pause(); phoneVideoEl.removeAttribute('src');
       lapVideoEl.pause(); lapVideoEl.removeAttribute('src');
     };
-  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lang, isMobile]); // isMobile ensures effect re-runs when canvas becomes available // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── mobile: skip Three.js entirely ──────────────────────────────────────
   if (isMobile === null) return null;           // avoid SSR/hydration mismatch
