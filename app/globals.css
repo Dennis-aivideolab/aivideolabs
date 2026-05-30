@@ -58,6 +58,11 @@ body {
   50%       { opacity: 0.9; transform: scale(1.15); }
 }
 
+@keyframes mobile-float {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-12px) rotate(1deg); }
+}
+
 .gradient-text {
   background: linear-gradient(100deg, var(--plat-dk), var(--plat) 42%, var(--plat-lt));
   -webkit-background-clip: text;

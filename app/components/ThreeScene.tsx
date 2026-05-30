@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import * as THREE from 'three';
@@ -56,6 +56,91 @@ const ST: Record<string, {
   },
 };
 
+// ── Mobile landing (lightweight, no Three.js) ─────────────────────────────
+function MobileLanding({ s, lang }: { s: typeof ST['de']; lang: string }) {
+  const t = getT(lang);
+  const grad: React.CSSProperties = {
+    fontStyle: 'italic', fontWeight: 400,
+    background: 'linear-gradient(100deg,var(--plat-dk),var(--plat) 42%,var(--plat-lt))',
+    WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+  };
+  return (
+    <>
+      {/* Nav */}
+      <nav style={{
+        position: 'fixed', zIndex: 20, top: 0, left: 0, right: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '20px 24px', borderBottom: '1px solid var(--line)',
+        backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+        background: 'rgba(8,10,13,0.6)',
+      }}>
+        <Link href={`/${lang}`} style={{
+          fontFamily: 'var(--font-fraunces,Georgia),serif', fontWeight: 500,
+          letterSpacing: '0.22em', fontSize: 14, display: 'flex', alignItems: 'center',
+          gap: 10, color: 'var(--ink)', textDecoration: 'none',
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--plat)', boxShadow: '0 0 10px var(--plat)', display: 'inline-block' }} />
+          AI VIDEO LABS
+        </Link>
+        <a href={`/${lang}#contact`} style={{
+          fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase',
+          padding: '10px 18px', border: '1px solid var(--plat-dk)', borderRadius: 2,
+          color: 'var(--plat-lt)', textDecoration: 'none',
+        }}>{t.nav.cta.replace(' →','').replace(' ✦','')}</a>
+      </nav>
+
+      {/* Hero */}
+      <div style={{
+        minHeight: '100dvh', display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', padding: '100px 24px 48px',
+      }}>
+        <div style={{ fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'var(--plat)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 28, height: 1, background: 'linear-gradient(90deg,var(--plat),transparent)', display: 'inline-block' }} />
+          {s.heroEyebrow}
+        </div>
+        <h1 className="font-fraunces" style={{ fontWeight: 300, fontSize: 'clamp(38px,11vw,60px)', lineHeight: 1.02, letterSpacing: '-0.01em', marginBottom: 24 }}>
+          {s.line1}<br />
+          <em style={grad}>{s.line2}</em><br />
+          {s.line3}
+        </h1>
+        <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.75, marginBottom: 36, maxWidth: '38ch' }}>{s.sub}</p>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <a href={`/${lang}#contact`} className="btn-primary" style={{ fontSize: 12, padding: '14px 28px' }}>{s.btn1}</a>
+        </div>
+
+        {/* Phone video preview */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 52 }}>
+          <div style={{
+            width: 150, borderRadius: 26, overflow: 'hidden',
+            border: '1.5px solid rgba(197,203,212,0.25)',
+            boxShadow: '0 0 48px rgba(197,203,212,0.12), 0 20px 60px rgba(0,0,0,0.5)',
+            animation: 'mobile-float 5s ease-in-out infinite',
+          }}>
+            <video src="/phone-video.mp4" autoPlay muted loop playsInline
+              style={{ width: '100%', display: 'block' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Service hints */}
+      <div style={{ padding: '0 24px 64px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {t.services.items.slice(0, 3).map((item, i) => (
+          <div key={i} style={{
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(220,228,238,0.10)',
+            borderRadius: 4, padding: '20px 22px', display: 'flex', alignItems: 'flex-start', gap: 14,
+          }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>{item.icon}</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)', marginBottom: 4 }}>{item.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 300, lineHeight: 1.6 }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 export default function ThreeScene() {
   const params = useParams();
@@ -70,6 +155,8 @@ export default function ThreeScene() {
     { href: `/${lang}#referenzen`, label: t.nav.referenzen },
     { href: `/${lang}#contact`, label: t.nav.contact },
   ];
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  useEffect(() => { setIsMobile(window.innerWidth < 768); }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heroRef   = useRef<HTMLDivElement>(null);
@@ -569,6 +656,10 @@ export default function ThreeScene() {
       lapVideoEl.pause(); lapVideoEl.removeAttribute('src');
     };
   }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── mobile: skip Three.js entirely ──────────────────────────────────────
+  if (isMobile === null) return null;           // avoid SSR/hydration mismatch
+  if (isMobile) return <MobileLanding s={s} lang={lang} />;
 
   // ── styles (static, inline) ───────────────────────────────────────────────
   const layerBase: React.CSSProperties = {
