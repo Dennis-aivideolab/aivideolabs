@@ -63,6 +63,11 @@ body {
   50%       { transform: translateY(-12px) rotate(1deg); }
 }
 
+@keyframes laptop-3d {
+  0%, 100% { transform: perspective(900px) rotateY(-10deg) rotateX(3deg); }
+  50%       { transform: perspective(900px) rotateY( 10deg) rotateX(1deg); }
+}
+
 @keyframes phone-3d {
   0%   { transform: rotateY(-22deg) rotateX(6deg)  scale(1);    }
   25%  { transform: rotateY(-6deg)  rotateX(-4deg) scale(1.03); }

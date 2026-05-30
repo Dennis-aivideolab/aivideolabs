@@ -158,6 +158,49 @@ function MobileLanding({ s, lang }: { s: typeof ST['de']; lang: string }) {
         }} />
       </div>
 
+      {/* CSS MacBook mockup with laptop video */}
+      <div style={{ padding: '0 24px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{
+          width: '100%', maxWidth: 300,
+          animation: 'laptop-3d 9s ease-in-out infinite',
+        }}>
+          {/* Screen / Lid */}
+          <div style={{
+            width: '100%', aspectRatio: '16/10',
+            background: '#0d0d0d',
+            borderRadius: '10px 10px 0 0',
+            border: '5px solid #222',
+            borderBottom: 'none',
+            overflow: 'hidden',
+            position: 'relative',
+          }}>
+            <video src="/laptop-video.mp4" autoPlay muted loop playsInline
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {/* Webcam dot */}
+            <div style={{ position: 'absolute', top: 5, left: '50%', transform: 'translateX(-50%)', width: 6, height: 6, borderRadius: '50%', background: '#2a2a2a' }} />
+            {/* Glare */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg,rgba(255,255,255,0.06) 0%,transparent 40%)', pointerEvents: 'none' }} />
+          </div>
+          {/* Base */}
+          <div style={{
+            width: '100%', height: 18,
+            background: 'linear-gradient(180deg,#1c1c1c,#151515)',
+            borderRadius: '0 0 5px 5px',
+            border: '5px solid #222', borderTop: '2px solid #333',
+            boxShadow: '0 6px 28px rgba(0,0,0,0.65)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{ width: 44, height: 4, background: '#2a2a2a', borderRadius: 2 }} />
+          </div>
+        </div>
+        {/* Glow under MacBook */}
+        <div style={{
+          width: 180, height: 10, marginTop: 8,
+          background: 'radial-gradient(ellipse,rgba(197,203,212,0.14) 0%,transparent 70%)',
+          filter: 'blur(6px)',
+        }} />
+      </div>
+
       {/* Service hints */}
       <div style={{ padding: '0 24px 64px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {t.services.items.slice(0, 3).map((item, i) => (
@@ -452,23 +495,25 @@ export default function ThreeScene() {
       // ── MacBook ─────────────────────────────────────────────────────────
       const macbookNode = gltf.scene.getObjectByName('macbook');
       if (macbookNode) {
-        // At rotY=0 the closed MacBook lies flat with rubber feet pointing +Z.
-        // We wrap it in orientGroup and rotate -90° X so that:
-        //   rubber feet (+Z) → -Y (below, on the "table")  ✓
-        //   keyboard    (-Z) → +Y (facing up)              ✓
-        //   lid opens toward +Z (camera) when rotated +X   ✓
+        // Original model: rubber feet +Z, Apple logo +Y, screen –Y, keyboard –Z.
+        // We need screen → +Z (camera), keyboard → +Y (up), feet → –Y (below).
+        // Single-axis rotations can't satisfy all three simultaneously, so we combine:
+        //   Rz(π)  ×  Rx(–π/2)  →  transform: (x,y,z) → (–x, –z, –y)
+        //   rubber feet (+Z) → –Y  ✓   keyboard (–Z) → +Y  ✓
+        //   Apple logo (+Y) → –Z   ✓   screen   (–Y) → +Z  ✓  (faces camera when closed)
         fitAndCenter(macbookNode, 'x', 3.5, 0);
 
         const orientGroup = new THREE.Group();
-        orientGroup.rotation.x = Math.PI / 2;  // rubber feet (+Z) → -Y (below), keyboard → up ✓
+        orientGroup.rotation.x = -Math.PI / 2;  // step 1: Rx(–90°)
+        orientGroup.rotation.z =  Math.PI;       // step 2: Rz(180°) — screen now faces +Z ✓
         orientGroup.add(macbookNode);
 
         laptop = new THREE.Group();
         laptop.add(orientGroup);
         scene.add(laptop);
         laptop.add(lglow);
-        // Glow positioned in front of where the open screen will be
-        lglow.position.set(0, 0.8, 1.2);
+        // Glow in front of the screen (screen faces +Z when closed, tilts back as it opens)
+        lglow.position.set(0, 0.0, 1.5);
 
         collectMaterials(macbookNode, lapMaterials);
 
@@ -570,7 +615,10 @@ export default function ThreeScene() {
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
     const LID_CLOSED = 0.0;
-    const LID_OPEN   = -Math.PI * 0.56;  // wider open → screen more perpendicular to camera
+    // With the new orientGroup (Rx–90 + Rz180), lid opens in –X direction.
+    // At θ=–0.25π the screen normal in world space is (0, –0.707, +0.707):
+    // visible from camera below-ish and in front.
+    const LID_OPEN   = -Math.PI * 0.25;
 
     function tick() {
       const elapsed = clock.getElapsedTime();
@@ -611,9 +659,9 @@ export default function ThreeScene() {
         laptop.scale.setScalar(ls);
         if (laptopLid) laptopLid.rotation.x = lerp(LID_CLOSED, LID_OPEN, lOpen);
         lglow.intensity = lScreen * 1.6 * (1 - lOut); // brighter glow in front of screen
-        laptop.rotation.y = lerp(-0.5, 0, lAppear) + tx * 0.14;
-        laptop.rotation.x = ty * 0.07 + 0.22;  // positive: screen tilts toward camera
-        laptop.position.y = -0.3 + lOut * 1.3;
+        laptop.rotation.y = lerp(-0.4, 0, lAppear) + tx * 0.14;
+        laptop.rotation.x = ty * 0.07;          // no constant tilt — screen already faces camera
+        laptop.position.y = 0.0 + lOut * 1.3;
         const lop = lAppear * (1 - lOut);
         lapMaterials.forEach(m => { m.opacity = lop; });
         const scrOp = lScreen * (1 - lOut);
@@ -630,7 +678,7 @@ export default function ThreeScene() {
       } else if (p < 0.45) {
         camTarget.set(0, 0, lerp(13, 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        camTarget.set(0, -0.2, 7.5); lookY = 0.7;  // lower camera, look up at open screen
+        camTarget.set(0, -0.4, 7.5); lookY = 0.6;  // camera slightly below, look at screen face
       } else {
         camTarget.set(0, 0, 11);
       }
