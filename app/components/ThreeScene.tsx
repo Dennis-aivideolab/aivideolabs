@@ -200,12 +200,12 @@ export default function ThreeScene() {
 
     // ── video elements for device screens ──
     const phoneVideoEl = document.createElement('video');
-    phoneVideoEl.src = '/Werbeclip.mp4';
+    phoneVideoEl.src = '/phone-video.mp4';
     phoneVideoEl.loop = true; phoneVideoEl.muted = true;
     phoneVideoEl.playsInline = true; phoneVideoEl.preload = 'auto';
 
     const lapVideoEl = document.createElement('video');
-    lapVideoEl.src = '/AI-Assets.mp4';
+    lapVideoEl.src = '/laptop-video.mp4';
     lapVideoEl.loop = true; lapVideoEl.muted = true;
     lapVideoEl.playsInline = true; lapVideoEl.preload = 'auto';
 
@@ -347,7 +347,6 @@ export default function ThreeScene() {
         //   keyboard    (-Z) → +Y (facing up)              ✓
         //   lid opens toward +Z (camera) when rotated +X   ✓
         fitAndCenter(macbookNode, 'x', 3.5, 0);
-        macbookNode.rotation.y = Math.PI; // flip so screen faces camera when lid opens
 
         const orientGroup = new THREE.Group();
         orientGroup.rotation.x = Math.PI / 2;  // rubber feet (+Z) → -Y (below), keyboard → up ✓
@@ -460,7 +459,7 @@ export default function ThreeScene() {
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
     const LID_CLOSED = 0.0;
-    const LID_OPEN   = -Math.PI * 0.48; // ~86° open — with Y-flip, screen faces camera
+    const LID_OPEN   = -Math.PI * 0.48;
 
     function tick() {
       const elapsed = clock.getElapsedTime();
@@ -502,7 +501,7 @@ export default function ThreeScene() {
         if (laptopLid) laptopLid.rotation.x = lerp(LID_CLOSED, LID_OPEN, lOpen);
         lglow.intensity = lScreen * 1.6 * (1 - lOut); // brighter glow in front of screen
         laptop.rotation.y = lerp(-0.5, 0, lAppear) + tx * 0.14;
-        laptop.rotation.x = ty * 0.07 + 0.15; // slight forward tilt — screen faces camera
+        laptop.rotation.x = ty * 0.07 - 0.38;
         laptop.position.y = -0.3 + lOut * 1.3;
         const lop = lAppear * (1 - lOut);
         lapMaterials.forEach(m => { m.opacity = lop; });
@@ -520,7 +519,7 @@ export default function ThreeScene() {
       } else if (p < 0.45) {
         camTarget.set(0, 0, lerp(13, 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        camTarget.set(0, 0.5, 6.2); lookY = 0.2;
+        camTarget.set(0, 0.6, 6.5); lookY = 0.1;
       } else {
         camTarget.set(0, 0, 11);
       }
