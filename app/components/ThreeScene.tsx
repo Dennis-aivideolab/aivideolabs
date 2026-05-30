@@ -292,24 +292,26 @@ export default function ThreeScene() {
 
         // Detect screen: material names are obfuscated random strings, so use geometry.
         // After fitAndCenter with rotY=π the screen faces +Z (toward camera).
-        // Strategy: compute each mesh's world bounding box; keep only front-face meshes
-        // (center.z > 0), then pick the one with the highest "flatness score":
-        //   score = XY-area / (Z-thickness + ε)
-        // The screen panel is large and very thin → wins clearly over the body shell.
+        // Combined score = (area / thickness) * (1 + max(center.z,0)*5)
+        //   - large flat meshes win over thick body shell
+        //   - front-face bonus ensures front glass beats back glass when equal flatness
+        //   - no hard Z cutoff so the filter never accidentally rejects the screen mesh
         phone.updateMatrixWorld(true);
         {
-          let bestScore = 0;
+          let bestScore = -Infinity;
           let screenMesh: THREE.Mesh | null = null;
           iphoneNode.traverse(obj => {
             if (!(obj instanceof THREE.Mesh)) return;
-            const box = new THREE.Box3().setFromObject(obj);  // world-space box
+            const box = new THREE.Box3().setFromObject(obj);  // world-space AABB
             const size = new THREE.Vector3();
             box.getSize(size);
             const center = new THREE.Vector3();
             box.getCenter(center);
-            if (center.z <= 0) return;                        // back-face — skip
             const area = size.x * size.y;
-            const score = area / (size.z + 0.0001);           // flat thin panels win
+            if (area < 0.01) return;                          // skip tiny meshes (buttons, screws)
+            const flatness = area / (size.z + 0.0001);        // thin flat panels score high
+            const frontBonus = 1 + Math.max(center.z, 0) * 5; // reward front-face position
+            const score = flatness * frontBonus;
             if (score > bestScore) { bestScore = score; screenMesh = obj as THREE.Mesh; }
           });
           if (screenMesh) {
@@ -445,7 +447,7 @@ export default function ThreeScene() {
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
     const LID_CLOSED = 0.0;
-    const LID_OPEN   = -Math.PI * 0.48;
+    const LID_OPEN   = -Math.PI * 0.56;  // wider open → screen more perpendicular to camera
 
     function tick() {
       const elapsed = clock.getElapsedTime();
@@ -487,7 +489,7 @@ export default function ThreeScene() {
         if (laptopLid) laptopLid.rotation.x = lerp(LID_CLOSED, LID_OPEN, lOpen);
         lglow.intensity = lScreen * 1.6 * (1 - lOut); // brighter glow in front of screen
         laptop.rotation.y = lerp(-0.5, 0, lAppear) + tx * 0.14;
-        laptop.rotation.x = ty * 0.07 - 0.38;
+        laptop.rotation.x = ty * 0.07 + 0.22;  // positive: screen tilts toward camera
         laptop.position.y = -0.3 + lOut * 1.3;
         const lop = lAppear * (1 - lOut);
         lapMaterials.forEach(m => { m.opacity = lop; });
@@ -505,7 +507,7 @@ export default function ThreeScene() {
       } else if (p < 0.45) {
         camTarget.set(0, 0, lerp(13, 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        camTarget.set(0, 0.6, 6.5); lookY = 0.1;
+        camTarget.set(0, -0.2, 7.5); lookY = 0.7;  // lower camera, look up at open screen
       } else {
         camTarget.set(0, 0, 11);
       }
