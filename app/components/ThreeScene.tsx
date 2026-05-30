@@ -108,18 +108,54 @@ function MobileLanding({ s, lang }: { s: typeof ST['de']; lang: string }) {
           <a href={`/${lang}#contact`} className="btn-primary" style={{ fontSize: 12, padding: '14px 28px' }}>{s.btn1}</a>
         </div>
 
-        {/* Phone video preview */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 52 }}>
+        {/* CSS-3D iPhone mockup with live video */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 52, perspective: '900px' }}>
           <div style={{
-            width: 150, borderRadius: 26, overflow: 'hidden',
-            border: '1.5px solid rgba(197,203,212,0.25)',
-            boxShadow: '0 0 48px rgba(197,203,212,0.12), 0 20px 60px rgba(0,0,0,0.5)',
-            animation: 'mobile-float 5s ease-in-out infinite',
+            width: 168,
+            aspectRatio: '9/19.5',
+            background: 'linear-gradient(160deg,#1e1e1e,#111)',
+            borderRadius: 44,
+            border: '7px solid #252525',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: [
+              '0 0 0 1px rgba(255,255,255,0.08)',
+              '0 40px 90px rgba(0,0,0,0.75)',
+              '0 0 50px rgba(197,203,212,0.08)',
+              'inset 0 0 0 1px rgba(255,255,255,0.04)',
+            ].join(','),
+            animation: 'phone-3d 7s ease-in-out infinite',
           }}>
+            {/* Screen video */}
             <video src="/phone-video.mp4" autoPlay muted loop playsInline
-              style={{ width: '100%', display: 'block' }} />
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+
+            {/* Dynamic Island */}
+            <div style={{
+              position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+              width: 74, height: 24, background: '#000', borderRadius: 13, zIndex: 3,
+            }} />
+
+            {/* Screen glare */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+              background: 'linear-gradient(145deg,rgba(255,255,255,0.07) 0%,transparent 40%)',
+            }} />
+
+            {/* Home indicator */}
+            <div style={{
+              position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
+              width: 52, height: 4, background: 'rgba(255,255,255,0.25)', borderRadius: 2, zIndex: 3,
+            }} />
           </div>
         </div>
+
+        {/* Glow under phone */}
+        <div style={{
+          width: 120, height: 12, margin: '12px auto 0',
+          background: 'radial-gradient(ellipse,rgba(197,203,212,0.18) 0%,transparent 70%)',
+          filter: 'blur(6px)',
+        }} />
       </div>
 
       {/* Service hints */}
