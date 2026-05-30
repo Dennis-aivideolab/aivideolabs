@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { getT } from '@/lib/i18n';
 
 // ── Per-language text ──────────────────────────────────────────────────────
@@ -84,8 +86,7 @@ export default function ThreeScene() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const currentT = getT(lang);
-    const svcNames = currentT.services.items.map((i: { title: string }) => i.title);
+    let aborted = false;
 
     // ── math helpers ──
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -197,175 +198,233 @@ export default function ThreeScene() {
     }));
     scene.add(dust);
 
-    // ── geometry helpers ──
-    function roundedRect(w: number, h: number, r: number): THREE.Shape {
-      const s = new THREE.Shape();
-      const x = -w / 2, y = -h / 2;
-      s.moveTo(x + r, y);
-      s.lineTo(x + w - r, y);
-      s.absarc(x + w - r, y + r,     r, -Math.PI / 2, 0, false);
-      s.lineTo(x + w, y + h - r);
-      s.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
-      s.lineTo(x + r, y + h);
-      s.absarc(x + r, y + h - r,     r, Math.PI / 2, Math.PI, false);
-      s.lineTo(x, y + r);
-      s.absarc(x + r, y + r,         r, Math.PI, Math.PI * 1.5, false);
-      return s;
+    // ── video elements for device screens ──
+    const phoneVideoEl = document.createElement('video');
+    phoneVideoEl.src = '/Werbeclip.mp4';
+    phoneVideoEl.loop = true; phoneVideoEl.muted = true;
+    phoneVideoEl.playsInline = true; phoneVideoEl.preload = 'auto';
+
+    const lapVideoEl = document.createElement('video');
+    lapVideoEl.src = '/AI-Assets.mp4';
+    lapVideoEl.loop = true; lapVideoEl.muted = true;
+    lapVideoEl.playsInline = true; lapVideoEl.preload = 'auto';
+
+    const phoneVideoTex = new THREE.VideoTexture(phoneVideoEl);
+    phoneVideoTex.colorSpace = THREE.SRGBColorSpace;
+    phoneVideoTex.minFilter = THREE.LinearFilter;
+    phoneVideoTex.magFilter = THREE.LinearFilter;
+
+    const lapVideoTex = new THREE.VideoTexture(lapVideoEl);
+    lapVideoTex.colorSpace = THREE.SRGBColorSpace;
+    lapVideoTex.minFilter = THREE.LinearFilter;
+    lapVideoTex.magFilter = THREE.LinearFilter;
+
+    // ── device model state ──
+    let phone: THREE.Group | null = null;
+    let laptop: THREE.Group | null = null;
+    let laptopLid: THREE.Object3D | null = null;
+    const phoneMaterials: THREE.Material[] = [];
+    const lapMaterials: THREE.Material[] = [];
+    let phoneScreenMat: THREE.MeshBasicMaterial | null = null;
+    let lapScreenMat: THREE.MeshBasicMaterial | null = null;
+    const lapScreenMats: THREE.MeshBasicMaterial[] = [];
+    const sglow = new THREE.PointLight(0xc0d4f5, 0, 8);
+    const lglow = new THREE.PointLight(0xc0d4f5, 0, 10);
+
+    // ── load GLB models ──
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('/draco/');
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
+
+    // Scale model to targetSize along given axis, apply rotY, and center at origin
+    function fitAndCenter(obj: THREE.Object3D, axis: 'x' | 'y' | 'z', targetSize: number, rotY = 0): number {
+      // Use a temp root so matrixWorld is correct during Box3 computation
+      const root = new THREE.Object3D();
+      root.add(obj);
+      obj.position.set(0, 0, 0);
+      obj.rotation.set(0, rotY, 0);
+      obj.scale.set(1, 1, 1);
+      root.updateMatrixWorld(true);
+      const box1 = new THREE.Box3().setFromObject(root);
+      const sz = new THREE.Vector3();
+      box1.getSize(sz);
+      const sc = targetSize / Math.max(sz[axis], 0.001);
+      obj.scale.setScalar(sc);
+      root.updateMatrixWorld(true);
+      const box2 = new THREE.Box3().setFromObject(root);
+      const ctr = new THREE.Vector3();
+      box2.getCenter(ctr);
+      obj.position.sub(ctr);
+      root.remove(obj);
+      return sc;
     }
-    function rrPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y,     x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x,     y + h, r);
-      ctx.arcTo(x,     y + h, x,     y,     r);
-      ctx.arcTo(x,     y,     x + w, y,     r);
-      ctx.closePath();
-    }
-    function slab(w: number, d: number, th: number, r: number) {
-      const g = new THREE.ExtrudeGeometry(roundedRect(w, d, r), {
-        depth: th, bevelEnabled: true, bevelThickness: th * 0.3,
-        bevelSize: 0.018, bevelSegments: 3, curveSegments: 18,
+
+    // Collect all materials from an object subtree
+    function collectMaterials(root: THREE.Object3D, out: THREE.Material[]) {
+      root.traverse(obj => {
+        if (!(obj instanceof THREE.Mesh)) return;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => {
+          if (!out.includes(m)) {
+            m.transparent = true;
+            out.push(m);
+          }
+        });
       });
-      g.rotateX(-Math.PI / 2);
-      return g;
-    }
-    function panel(w: number, h: number, th: number, r: number) {
-      const g = new THREE.ExtrudeGeometry(roundedRect(w, h, r), {
-        depth: th, bevelEnabled: true, bevelThickness: th * 0.3,
-        bevelSize: 0.016, bevelSegments: 3, curveSegments: 18,
-      });
-      g.translate(0, 0, -th / 2);
-      return g;
     }
 
-    // ── materials ──
-    const titanium = new THREE.MeshStandardMaterial({ color: 0xc7ccd3, metalness: 1.0, roughness: 0.30, transparent: true, envMapIntensity: 1.1 });
-    const aluminium = new THREE.MeshStandardMaterial({ color: 0xcbd0d8, metalness: 1.0, roughness: 0.34, transparent: true, envMapIntensity: 1.0 });
-    const aluDk   = new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.85, roughness: 0.5,  transparent: true });
-    const blackGlass = new THREE.MeshStandardMaterial({ color: 0x05070a, metalness: 0.6, roughness: 0.07, transparent: true, envMapIntensity: 1.2 });
-    const btnMat  = new THREE.MeshStandardMaterial({ color: 0x9aa1ab, metalness: 1.0, roughness: 0.4,  transparent: true });
-    const islandMat = new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.4, roughness: 0.2, transparent: true });
-    const padMat  = new THREE.MeshStandardMaterial({ color: 0x2c313a, metalness: 0.5, roughness: 0.35, transparent: true });
+    gltfLoader.load('/models/devices.glb', (gltf) => {
+      if (aborted) return;
 
-    // ── iPhone ──
-    const phone = new THREE.Group(); scene.add(phone);
-    const W = 1.5, H = 3.1, R = 0.34, DEPTH = 0.16;
-    phone.add(new THREE.Mesh(panel(W, H, DEPTH, R), titanium));
-    const glass = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(W - 0.1, H - 0.1, R - 0.04), 24), blackGlass);
-    glass.position.z = DEPTH / 2 + 0.005; phone.add(glass);
+      // ── iPhone ──────────────────────────────────────────────────────────
+      const iphoneNode = gltf.scene.getObjectByName('iphone');
+      if (iphoneNode) {
+        fitAndCenter(iphoneNode, 'y', 3.1, Math.PI); // flip: screen faces +Z (toward camera)
 
-    // reel canvas
-    const rc = document.createElement('canvas'); rc.width = 560; rc.height = 1180;
-    const rx2 = rc.getContext('2d')!;
-    type Pal = { a: string; b: string; h: string; g: string };
-    const PAL: Pal[] = [
-      { a: '#16384f', b: '#0a1822', h: '#0c2330', g: 'rgba(120,190,230,' },
-      { a: '#3a2336', b: '#160d16', h: '#241019', g: 'rgba(220,150,190,' },
-      { a: '#123a33', b: '#08110f', h: '#0e251f', g: 'rgba(150,220,190,' },
-      { a: '#3a3024', b: '#15110a', h: '#241c10', g: 'rgba(235,200,140,' },
-    ];
-    function drawReel(elapsed: number) {
-      const W2 = rc.width, H2 = rc.height;
-      rx2.clearRect(0, 0, W2, H2);
-      rx2.save(); rrPath(rx2, 0, 0, W2, H2, 86); rx2.clip();
-      const dur = 3.6;
-      const idx = Math.floor(elapsed / dur) % PAL.length;
-      const nidx = (idx + 1) % PAL.length;
-      const loc = (elapsed % dur) / dur;
-      const sc = (P: Pal, off: number) => {
-        const gY = rx2.createLinearGradient(0, 0, 0, H2);
-        gY.addColorStop(0, P.a); gY.addColorStop(0.55, P.b); gY.addColorStop(1, '#05070a');
-        rx2.fillStyle = gY; rx2.fillRect(0, 0, W2, H2);
-        const sx = W2 * 0.5 + Math.sin(elapsed * 0.3 + off) * 120;
-        const gl = rx2.createRadialGradient(sx, H2 * 0.42, 0, sx, H2 * 0.42, 260);
-        gl.addColorStop(0, P.g + '0.55)'); gl.addColorStop(1, P.g + '0)');
-        rx2.fillStyle = gl; rx2.fillRect(0, 0, W2, H2);
-        rx2.fillStyle = P.h; rx2.beginPath(); rx2.moveTo(0, H2 * 0.6);
-        for (let x = 0; x <= W2; x += 40) rx2.lineTo(x, H2 * 0.6 + Math.sin(x * 0.01 + elapsed * 0.4 + off) * 26);
-        rx2.lineTo(W2, H2); rx2.lineTo(0, H2); rx2.fill();
-        rx2.fillStyle = 'rgba(0,0,0,.45)'; rx2.beginPath(); rx2.moveTo(0, H2 * 0.72);
-        for (let x = 0; x <= W2; x += 36) rx2.lineTo(x, H2 * 0.72 + Math.sin(x * 0.013 - elapsed * 0.5 + off) * 30);
-        rx2.lineTo(W2, H2); rx2.lineTo(0, H2); rx2.fill();
-      };
-      sc(PAL[idx], 0);
-      if (loc > 0.86) { rx2.globalAlpha = smooth(loc, 0.86, 1); sc(PAL[nidx], 10); rx2.globalAlpha = 1; }
-      rx2.fillStyle = '#000';
-      rx2.fillRect(0, 0, W2, H2 * 0.085);
-      rx2.fillRect(0, H2 * 0.915, W2, H2 * 0.085);
-      for (let i = 0; i < 55; i++) {
-        rx2.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.04) + ')';
-        rx2.fillRect(Math.random() * W2, Math.random() * H2, 2, 2);
+        phone = new THREE.Group();
+        phone.add(iphoneNode);
+        scene.add(phone);
+        phone.add(sglow);
+        sglow.position.set(0, 0, 1.2);
+
+        collectMaterials(iphoneNode, phoneMaterials);
+
+        // Find the phone screen mesh by material name
+        // iPhone 15 Pro Max model by polyman Studio: screen is typically
+        // a glass/OLED-named material or the glossiest dark mesh
+        iphoneNode.traverse(obj => {
+          if (!(obj instanceof THREE.Mesh) || phoneScreenMat) return;
+          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+          const n = (mat?.name ?? '').toLowerCase();
+          const isScreen =
+            n.includes('screen') || n.includes('oled') || n.includes('display') ||
+            (n.includes('glass') && !n.includes('back') && !n.includes('camera') && !n.includes('lens'));
+          if (isScreen) {
+            const scrMat = new THREE.MeshBasicMaterial({
+              map: phoneVideoTex, transparent: true, opacity: 0,
+              side: THREE.DoubleSide,
+            });
+            (obj as THREE.Mesh).material = scrMat;
+            phoneScreenMat = scrMat;
+            phoneMaterials.push(scrMat);
+            void phoneVideoEl.play().catch(() => {});
+          }
+        });
+
+        // Fallback: pick the darkest + glossiest MeshStandardMaterial
+        if (!phoneScreenMat) {
+          let bestRoughness = 1;
+          let bestMesh: THREE.Mesh | null = null;
+          iphoneNode.traverse(obj => {
+            if (!(obj instanceof THREE.Mesh)) return;
+            const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+            if (mat instanceof THREE.MeshStandardMaterial) {
+              if (mat.roughness < bestRoughness) {
+                bestRoughness = mat.roughness;
+                bestMesh = obj as THREE.Mesh;
+              }
+            }
+          });
+          if (bestMesh) {
+            const scrMat = new THREE.MeshBasicMaterial({
+              map: phoneVideoTex, transparent: true, opacity: 0,
+            });
+            (bestMesh as THREE.Mesh).material = scrMat;
+            phoneScreenMat = scrMat;
+            phoneMaterials.push(scrMat);
+            void phoneVideoEl.play().catch(() => {});
+          }
+        }
       }
-      rx2.fillStyle = 'rgba(255,80,80,.9)'; rx2.beginPath(); rx2.arc(52, H2 * 0.085 + 44, 9, 0, 7); rx2.fill();
-      rx2.fillStyle = 'rgba(255,255,255,.85)';
-      rx2.font = '600 22px sans-serif'; rx2.fillText('REC · 4K', 74, H2 * 0.085 + 52);
-      const tc = Math.floor(elapsed * 24) % 24, ss = Math.floor(elapsed) % 60, mm = Math.floor(elapsed / 60) % 60;
-      rx2.textAlign = 'right';
-      rx2.fillText(String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+':'+String(tc).padStart(2,'0'), W2 - 48, H2 * 0.085 + 52);
-      rx2.textAlign = 'left';
-      rx2.strokeStyle = 'rgba(255,255,255,.25)'; rx2.lineWidth = 2;
-      rx2.strokeRect(38, H2 * 0.915 - 66, W2 - 76, 38);
-      rx2.fillStyle = 'rgba(255,255,255,.9)';
-      rx2.fillRect(42, H2 * 0.915 - 62, (W2 - 84) * ((elapsed * 0.08) % 1), 30);
-      rx2.restore();
-    }
-    drawReel(0);
-    const reelTex = new THREE.CanvasTexture(rc);
-    reelTex.anisotropy = 4;
-    const reelMat = new THREE.MeshBasicMaterial({ map: reelTex, transparent: true, opacity: 0 });
-    const reel = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.14, H - 0.14), reelMat);
-    reel.position.z = DEPTH / 2 + 0.012; phone.add(reel);
 
-    const island = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 0.03), islandMat);
-    island.position.set(0, H / 2 - 0.32, DEPTH / 2 + 0.02); phone.add(island);
-    const sglow = new THREE.PointLight(0xaecbe6, 0, 6);
-    sglow.position.set(0, 0, 1.2); phone.add(sglow);
-    ([[W/2+0.012, 0.5, 0.36], [-W/2-0.012, 0.62, 0.46], [-W/2-0.012, 0.16, 0.3]] as [number,number,number][]).forEach(b => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(0.04, b[2], 0.1), btnMat);
-      m.position.set(b[0], b[1], 0); phone.add(m);
+      // ── MacBook ─────────────────────────────────────────────────────────
+      const macbookNode = gltf.scene.getObjectByName('macbook');
+      if (macbookNode) {
+        // At rotY=0 the closed MacBook lies flat with rubber feet pointing +Z.
+        // We wrap it in orientGroup and rotate -90° X so that:
+        //   rubber feet (+Z) → -Y (below, on the "table")  ✓
+        //   keyboard    (-Z) → +Y (facing up)              ✓
+        //   lid opens toward +Z (camera) when rotated +X   ✓
+        fitAndCenter(macbookNode, 'x', 3.5, 0);
+
+        const orientGroup = new THREE.Group();
+        orientGroup.rotation.x = Math.PI / 2;  // rubber feet (+Z) → -Y (below), keyboard → up ✓
+        orientGroup.add(macbookNode);
+
+        laptop = new THREE.Group();
+        laptop.add(orientGroup);
+        scene.add(laptop);
+        laptop.add(lglow);
+        // Glow positioned in front of where the open screen will be
+        lglow.position.set(0, 0.8, 1.2);
+
+        collectMaterials(macbookNode, lapMaterials);
+
+        // Apply video texture to all display meshes in the lid (Bevels_2).
+        // Black_Glass_0_1 = main display panel; Glass_0_1 = cover glass overlay.
+        // DoubleSide ensures the texture renders regardless of which way normals face.
+        laptopLid = macbookNode.getObjectByName('Bevels_2') ?? null;
+        const screenNames = new Set(['Black_Glass_0_1', 'Glass_0_1']);
+        macbookNode.traverse(obj => {
+          if (!(obj instanceof THREE.Mesh)) return;
+          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+          const matName = mat?.name ?? '';
+          if (!screenNames.has(matName)) return;
+          const scrMat = new THREE.MeshBasicMaterial({
+            map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
+            color: new THREE.Color(4, 4, 4), // HDR boost so ACES tone-maps dark video to visible range
+          });
+          (obj as THREE.Mesh).material = scrMat;
+          if (!lapScreenMat) lapScreenMat = scrMat;
+          lapScreenMats.push(scrMat);
+          lapMaterials.push(scrMat);
+          void lapVideoEl.play().catch(() => {});
+        });
+        // Fallback: use glossiest mesh in Bevels_2 if named meshes not found
+        if (!lapScreenMat) {
+          let best = 1, bestMesh: THREE.Mesh | null = null;
+          laptopLid?.traverse(o => {
+            if (!(o instanceof THREE.Mesh)) return;
+            const m = Array.isArray(o.material) ? o.material[0] : o.material;
+            if (m instanceof THREE.MeshStandardMaterial && m.roughness < best) {
+              best = m.roughness; bestMesh = o as THREE.Mesh;
+            }
+          });
+          if (bestMesh) {
+            const scrMat = new THREE.MeshBasicMaterial({
+              map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
+              color: new THREE.Color(4, 4, 4),
+            });
+            (bestMesh as THREE.Mesh).material = scrMat;
+            lapScreenMat = scrMat; lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
+            void lapVideoEl.play().catch(() => {});
+          }
+        }
+
+        // Remove Apple logo branding.
+        // - Material.002_0_1 and Material.001_0_1 are overlay meshes → hide
+        // - The Apple logo indentation is baked into Space_Grey_0_1 as a normal/bump map
+        //   → clear normalMap on those materials to erase the 3D indent
+        macbookNode.traverse(obj => {
+          if (!(obj instanceof THREE.Mesh)) return;
+          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+          const n = (mat?.name ?? '').toLowerCase();
+          if (n.includes('apple') || n.includes('logo') ||
+              n === 'material.002_0_1' || n === 'material.001_0_1') {
+            obj.visible = false;
+          }
+          // Remove normal-map bump that creates the 3D Apple logo indent
+          if ((n === 'space_grey_0_1' || n === 'space_grey.001_0_1') &&
+              mat instanceof THREE.MeshStandardMaterial) {
+            mat.normalMap = null;
+            mat.needsUpdate = true;
+          }
+        });
+      }
+    }, undefined, (err: unknown) => {
+      if (!aborted) console.error('GLB load error:', err);
     });
-    const phoneMats = [titanium, blackGlass, btnMat, islandMat];
-
-    // ── MacBook ──
-    const laptop = new THREE.Group(); laptop.position.set(0, -0.55, 0); scene.add(laptop);
-    laptop.add(new THREE.Mesh(slab(3.5, 2.4, 0.12, 0.10), aluminium));
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.012, 2.1), aluDk);
-    deck.position.y = 0.122; laptop.add(deck);
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.014, 0.66), padMat);
-    pad.position.set(0, 0.124, 0.62); laptop.add(pad);
-    const lid = new THREE.Group(); lid.position.set(0, 0.12, -1.18); laptop.add(lid);
-    const lidShell = new THREE.Mesh(panel(3.5, 2.25, 0.08, 0.10), aluminium);
-    lidShell.position.y = 1.125; lid.add(lidShell);
-
-    // services canvas
-    const lc = document.createElement('canvas'); lc.width = 1024; lc.height = 640;
-    const lx = lc.getContext('2d')!;
-    function drawSvc(elapsed: number) {
-      lx.fillStyle = '#0c0f14'; lx.fillRect(0, 0, 1024, 640);
-      const vg = lx.createRadialGradient(512, 300, 80, 512, 300, 640);
-      vg.addColorStop(0, 'rgba(40,48,60,.45)'); vg.addColorStop(1, 'rgba(8,10,14,1)');
-      lx.fillStyle = vg; lx.fillRect(0, 0, 1024, 640);
-      lx.fillStyle = '#878d99'; lx.font = '500 22px sans-serif'; lx.fillText('SERVICES', 60, 72);
-      lx.strokeStyle = 'rgba(220,228,238,.14)'; lx.beginPath(); lx.moveTo(60, 96); lx.lineTo(964, 96); lx.stroke();
-      const hi = Math.floor(elapsed * 0.5) % 4;
-      svcNames.forEach((it, i) => {
-        const y = 180 + i * 100;
-        lx.fillStyle = i === hi ? '#eef1f5' : '#5f6671';
-        lx.font = '300 40px Georgia,serif'; lx.fillText(it, 60, y);
-        lx.fillStyle = i === hi ? '#c5cbd4' : '#3a4049';
-        lx.font = 'italic 300 26px Georgia,serif'; lx.fillText('0' + (i + 1), 924, y - 6);
-        lx.strokeStyle = 'rgba(220,228,238,.08)'; lx.beginPath(); lx.moveTo(60, y + 30); lx.lineTo(964, y + 30); lx.stroke();
-      });
-    }
-    drawSvc(0);
-    const svcTex = new THREE.CanvasTexture(lc);
-    const lscreenMat = new THREE.MeshBasicMaterial({ map: svcTex, transparent: true, opacity: 0 });
-    const lscreen = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.0), lscreenMat);
-    lscreen.position.set(0, 1.125, 0.045); lid.add(lscreen);
-    const lglow = new THREE.PointLight(0xaecbe6, 0, 7);
-    lglow.position.set(0, 1.3, 0.6); lid.add(lglow);
-    const CLOSED = Math.PI * 0.5, OPEN = -0.1;
-    const lapMats = [aluminium, aluDk, padMat];
 
     // ── contact shadow ──
     const shC = document.createElement('canvas'); shC.width = shC.height = 256;
@@ -396,50 +455,62 @@ export default function ThreeScene() {
     const clock = new THREE.Clock();
     let animId = 0;
     const camTarget = new THREE.Vector3(0, 0, 14);
+    // MacBook lid animation angles
+    // orientGroup rotates the flat model upright (-90° X), so the lid opens
+    // by rotating in +X direction to swing toward the camera
+    const LID_CLOSED = 0.0;
+    const LID_OPEN   = -Math.PI * 0.48; // screen face rotates to face camera at ~86°
 
     function tick() {
-      const t = clock.getElapsedTime();
+      const elapsed = clock.getElapsedTime();
       const p = getProgress();
 
-      dust.rotation.y = t * 0.02;
-      dust.rotation.x = Math.sin(t * 0.07) * 0.06;
+      dust.rotation.y = elapsed * 0.02;
+      dust.rotation.x = Math.sin(elapsed * 0.07) * 0.06;
 
       // ── phone ──
       const pAppear = smooth(p, 0.11, 0.22);
       const pSpin   = smooth(p, 0.11, 0.30);
       const pScreen = smooth(p, 0.24, 0.33);
       const pOut    = smooth(p, 0.36, 0.43);
-      phone.visible = pAppear > 0.001 && pOut < 0.999;
-      const ps = lerp(0.25, 1, pAppear) * lerp(1, 0.55, pOut);
-      phone.scale.setScalar(ps);
-      phone.rotation.y = lerp(-Math.PI * 3, 0, pSpin) + tx * 0.3 + Math.sin(t * 0.4) * 0.04 * pSpin;
-      phone.rotation.x = ty * 0.12 + lerp(0.2, 0, pSpin);
-      phone.rotation.z = lerp(0.25, 0, pAppear);
-      phone.position.y = lerp(0, 1.6, pOut);
-      const pop = pAppear * (1 - pOut);
-      reelMat.opacity = pScreen * (1 - pOut);
-      sglow.intensity = pScreen * 1.1 * (1 - pOut);
-      phoneMats.forEach(m => { m.opacity = pop; });
+
+      if (phone) {
+        phone.visible = pAppear > 0.001 && pOut < 0.999;
+        const ps = lerp(0.25, 1, pAppear) * lerp(1, 0.55, pOut);
+        phone.scale.setScalar(ps);
+        phone.rotation.y = lerp(-Math.PI * 3, 0, pSpin) + tx * 0.3 + Math.sin(elapsed * 0.4) * 0.04 * pSpin;
+        phone.rotation.x = ty * 0.12 + lerp(0.2, 0, pSpin);
+        phone.rotation.z = lerp(0.25, 0, pAppear);
+        phone.position.y = lerp(0, 1.6, pOut);
+        const pop = pAppear * (1 - pOut);
+        sglow.intensity = pScreen * 1.1 * (1 - pOut);
+        phoneMaterials.forEach(m => { m.opacity = pop; });
+        if (phoneScreenMat) phoneScreenMat.opacity = pScreen * (1 - pOut);
+      }
 
       // ── laptop ──
       const lAppear = smooth(p, 0.50, 0.57);
       const lOpen   = smooth(p, 0.55, 0.66);
       const lScreen = smooth(p, 0.60, 0.68);
       const lOut    = smooth(p, 0.70, 0.76);
-      laptop.visible = lAppear > 0.001 && lOut < 0.999;
-      const ls = lerp(0.55, 1, lAppear) * lerp(1, 0.72, lOut);
-      laptop.scale.setScalar(ls);
-      lid.rotation.x = lerp(CLOSED, OPEN, lOpen);
-      lglow.intensity = lScreen * 0.8 * (1 - lOut);
-      lscreenMat.opacity = lScreen * (1 - lOut);
-      laptop.rotation.y = lerp(-0.5, 0, lAppear) + tx * 0.14;
-      laptop.rotation.x = ty * 0.07;
-      laptop.position.y = -0.55 + lOut * 1.3;
-      const lop = lAppear * (1 - lOut);
-      lapMats.forEach(m => { m.opacity = lop; });
-      shadowMat.opacity = lop * 0.5;
-      shadow.scale.setScalar(ls);
-      shadow.position.y = -1.45 + laptop.position.y * 0.2;
+
+      if (laptop) {
+        laptop.visible = lAppear > 0.001 && lOut < 0.999;
+        const ls = lerp(0.55, 1, lAppear) * lerp(1, 0.72, lOut);
+        laptop.scale.setScalar(ls);
+        if (laptopLid) laptopLid.rotation.x = lerp(LID_CLOSED, LID_OPEN, lOpen);
+        lglow.intensity = lScreen * 1.6 * (1 - lOut); // brighter glow in front of screen
+        laptop.rotation.y = lerp(-0.5, 0, lAppear) + tx * 0.14;
+        laptop.rotation.x = ty * 0.07 - 0.38; // ~22° tilt: screen faces camera at -PI*0.48 open
+        laptop.position.y = -0.5 + lOut * 1.3;
+        const lop = lAppear * (1 - lOut);
+        lapMaterials.forEach(m => { m.opacity = lop; });
+        const scrOp = lScreen * (1 - lOut);
+        lapScreenMats.forEach(m => { m.opacity = scrOp; });
+        shadowMat.opacity = lop * 0.5;
+        shadow.scale.setScalar(ls);
+        shadow.position.y = -1.45 + laptop.position.y * 0.2;
+      }
 
       // ── camera ──
       let lookY = 0;
@@ -479,10 +550,6 @@ export default function ThreeScene() {
         }
       });
 
-      // ── canvas texture updates ──
-      if (pScreen > 0.02 && pOut < 0.99) { drawReel(t); reelTex.needsUpdate = true; }
-      if (lScreen > 0.02 && lOut < 0.99) { drawSvc(t);  svcTex.needsUpdate  = true; }
-
       renderer.render(scene, camera);
       animId = requestAnimationFrame(tick);
     }
@@ -498,14 +565,20 @@ export default function ThreeScene() {
 
     // ── cleanup ──
     return () => {
+      aborted = true;
       cancelAnimationFrame(animId);
       cancelAnimationFrame(ringAnimId);
       window.removeEventListener('mousemove', onMouseMoveCursor);
       window.removeEventListener('mousemove', onMouseMoveScene);
       window.removeEventListener('resize', onResize);
       renderer.dispose();
-      [titanium, aluminium, aluDk, blackGlass, btnMat, islandMat, padMat, reelMat, lscreenMat, shadowMat].forEach(m => m.dispose());
-      [sprTex, reelTex, svcTex, shadowTex].forEach(tex => tex.dispose());
+      dracoLoader.dispose();
+      phoneMaterials.forEach(m => m.dispose());
+      lapMaterials.forEach(m => m.dispose());
+      shadowMat.dispose();
+      [sprTex, shadowTex, phoneVideoTex, lapVideoTex].forEach(tex => tex.dispose());
+      phoneVideoEl.pause(); phoneVideoEl.removeAttribute('src');
+      lapVideoEl.pause(); lapVideoEl.removeAttribute('src');
     };
   }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
