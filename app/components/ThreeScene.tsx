@@ -595,7 +595,8 @@ export default function ThreeScene() {
       const cueEl  = cueRef.current;
       const heroF  = 1 - smooth(p, 0.04, 0.10);
       if (heroEl) { heroEl.style.opacity = String(heroF); heroEl.style.transform = `translateY(${-smooth(p,0.04,0.10)*36}px)`; }
-      if (cueEl)  cueEl.style.opacity  = String(heroF);
+      // Scroll cue stays visible the whole journey — only fades at the very end
+      if (cueEl)  cueEl.style.opacity  = String(1 - smooth(p, 0.92, 0.98));
       if (svcEl)  svcEl.style.opacity  = String(band(p, 0.45, 0.50, 0.70, 0.745));
       if (pfEl)   pfEl.style.opacity   = String(band(p, 0.79, 0.83, 0.88, 0.915));
       if (refEl)  refEl.style.opacity  = String(band(p, 0.90, 0.93, 0.965, 0.985));
