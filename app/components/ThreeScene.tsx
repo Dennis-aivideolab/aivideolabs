@@ -527,7 +527,9 @@ export default function ThreeScene() {
         laptopLid = macbookNode.getObjectByName('Bevels_2') ?? null;
 
         // Step 1: try known material names (fast path)
-        const screenNames = new Set(['Black_Glass_0_1', 'Glass_0_1']);
+        // Only apply to Black_Glass_0_1 (main panel). Glass_0_1 is a co-planar glass
+        // overlay — putting video on both causes Z-fighting (blue/orange blinking).
+        const screenNames = new Set(['Black_Glass_0_1']);
         macbookNode.traverse(obj => {
           if (!(obj instanceof THREE.Mesh)) return;
           const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
