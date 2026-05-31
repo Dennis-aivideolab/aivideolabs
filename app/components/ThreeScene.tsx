@@ -374,7 +374,8 @@ export default function ThreeScene() {
     function makeVideo(src: string): HTMLVideoElement {
       const v = document.createElement('video');
       v.src = src; v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'auto';
-      v.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0;pointer-events:none';
+      // Must have real size & be in viewport — Chrome skips frame decoding for off-screen/0-size videos
+      v.style.cssText = 'position:fixed;bottom:0;left:0;width:320px;height:180px;opacity:0.001;z-index:-1;pointer-events:none';
       document.body.appendChild(v);
       void v.play().catch(() => {
         v.addEventListener('canplay', () => { void v.play().catch(() => {}); }, { once: true });
@@ -546,6 +547,12 @@ export default function ThreeScene() {
         // Step 2: geometry-based fallback — same flatness×frontBonus as iPhone detection
         // The screen panel is the flattest (large XY area, thin Z) front-facing mesh.
         if (!lapScreenMat) {
+          // At GLTF load time the lid is closed — the screen panel lies FLAT.
+          // When flat, the screen's XY area (glass-thickness × width) is tiny and
+          // the old `size.x * size.y` filter discards it. Instead sort the three
+          // dimensions and use the two LARGEST as face area + the SMALLEST as
+          // thickness — this correctly scores the screen panel regardless of whether
+          // the lid is closed (flat in Y) or open (thin in Z).
           laptop.updateMatrixWorld(true);
           let bestScore = -Infinity;
           let screenMesh: THREE.Mesh | null = null;
@@ -554,13 +561,12 @@ export default function ThreeScene() {
             const box = new THREE.Box3().setFromObject(obj);
             const size = new THREE.Vector3();
             box.getSize(size);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            const area = size.x * size.y;
-            if (area < 0.05) return;
-            const flatness  = area / (size.z + 0.0001);
-            const frontBonus = 1 + Math.max(center.z, 0) * 5;
-            const score = flatness * frontBonus;
+            const dims = [size.x, size.y, size.z].sort((a, b) => a - b); // asc
+            const maxArea  = dims[1] * dims[2]; // two largest dims
+            const minDim   = dims[0];            // thinnest dimension
+            if (maxArea < 0.05) return;          // skip truly tiny meshes
+            const flatness = maxArea / (minDim + 0.0001);
+            const score = flatness;              // highest for thin flat panels
             if (score > bestScore) { bestScore = score; screenMesh = obj as THREE.Mesh; }
           });
           if (screenMesh) {
@@ -645,6 +651,11 @@ export default function ThreeScene() {
 
     function tick() {
       const elapsed = clock.getElapsedTime();
+      // Force video textures to update each frame — VideoTexture.needsUpdate
+      // must be set manually when videos are off-screen DOM elements in some
+      // Three.js / browser combinations.
+      if (!phoneVideoEl.paused) phoneVideoTex.needsUpdate = true;
+      if (!lapVideoEl.paused)   lapVideoTex.needsUpdate   = true;
       const p = getProgress();
 
       dust.rotation.y = elapsed * 0.02;
