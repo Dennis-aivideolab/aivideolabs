@@ -798,6 +798,9 @@ export default function ThreeScene() {
         style={{
           position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          // paddingTop keeps the video below the "Was wir komponieren" heading
+          paddingTop: 'clamp(80px, 22vh, 180px)',
+          paddingBottom: 'clamp(40px, 8vh, 80px)',
           opacity: 0,
           willChange: 'opacity, transform',
         }}
@@ -806,7 +809,10 @@ export default function ThreeScene() {
           src="/laptop-video.mp4"
           autoPlay muted loop playsInline
           style={{
-            width: 'clamp(280px, 72vw, 960px)',
+            // max-height ensures the video never touches the heading above
+            width: 'clamp(240px, 62vw, 820px)',
+            maxHeight: '60vh',
+            objectFit: 'contain',
             borderRadius: 'clamp(8px, 1.2vw, 20px)',
             boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(220,228,238,0.12)',
             display: 'block',
