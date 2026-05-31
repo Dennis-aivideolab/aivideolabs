@@ -368,15 +368,21 @@ export default function ThreeScene() {
     scene.add(dust);
 
     // ── video elements for device screens ──
-    const phoneVideoEl = document.createElement('video');
-    phoneVideoEl.src = '/phone-video.mp4';
-    phoneVideoEl.loop = true; phoneVideoEl.muted = true;
-    phoneVideoEl.playsInline = true; phoneVideoEl.preload = 'auto';
-
-    const lapVideoEl = document.createElement('video');
-    lapVideoEl.src = '/laptop-video.mp4';
-    lapVideoEl.loop = true; lapVideoEl.muted = true;
-    lapVideoEl.playsInline = true; lapVideoEl.preload = 'auto';
+    // Attaching to DOM (hidden) is the most reliable way to guarantee autoplay
+    // across all browsers and iOS Safari — muted off-screen video elements load
+    // and play without user gesture in all modern browsers.
+    function makeVideo(src: string): HTMLVideoElement {
+      const v = document.createElement('video');
+      v.src = src; v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0;pointer-events:none';
+      document.body.appendChild(v);
+      void v.play().catch(() => {
+        v.addEventListener('canplay', () => { void v.play().catch(() => {}); }, { once: true });
+      });
+      return v;
+    }
+    const phoneVideoEl = makeVideo('/phone-video.mp4');
+    const lapVideoEl   = makeVideo('/laptop-video.mp4');
 
     const phoneVideoTex = new THREE.VideoTexture(phoneVideoEl);
     phoneVideoTex.colorSpace = THREE.SRGBColorSpace;
@@ -517,45 +523,62 @@ export default function ThreeScene() {
 
         collectMaterials(macbookNode, lapMaterials);
 
-        // Apply video texture to all display meshes in the lid (Bevels_2).
-        // Black_Glass_0_1 = main display panel; Glass_0_1 = cover glass overlay.
-        // DoubleSide ensures the texture renders regardless of which way normals face.
+        // ── MacBook screen detection ──────────────────────────────────────────
         laptopLid = macbookNode.getObjectByName('Bevels_2') ?? null;
+
+        // Step 1: try known material names (fast path)
         const screenNames = new Set(['Black_Glass_0_1', 'Glass_0_1']);
         macbookNode.traverse(obj => {
           if (!(obj instanceof THREE.Mesh)) return;
           const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-          const matName = mat?.name ?? '';
-          if (!screenNames.has(matName)) return;
+          if (!screenNames.has(mat?.name ?? '')) return;
           const scrMat = new THREE.MeshBasicMaterial({
             map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
-            color: new THREE.Color(4, 4, 4), // HDR boost so ACES tone-maps dark video to visible range
+            color: new THREE.Color(1.8, 1.8, 1.8), // mild HDR lift — keeps video detail visible under ACES
           });
           (obj as THREE.Mesh).material = scrMat;
           if (!lapScreenMat) lapScreenMat = scrMat;
-          lapScreenMats.push(scrMat);
-          lapMaterials.push(scrMat);
-          void lapVideoEl.play().catch(() => {});
+          lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
         });
-        // Fallback: use glossiest mesh in Bevels_2 if named meshes not found
+
+        // Step 2: geometry-based fallback — same flatness×frontBonus as iPhone detection
+        // The screen panel is the flattest (large XY area, thin Z) front-facing mesh.
         if (!lapScreenMat) {
-          let best = 1, bestMesh: THREE.Mesh | null = null;
-          laptopLid?.traverse(o => {
-            if (!(o instanceof THREE.Mesh)) return;
-            const m = Array.isArray(o.material) ? o.material[0] : o.material;
-            if (m instanceof THREE.MeshStandardMaterial && m.roughness < best) {
-              best = m.roughness; bestMesh = o as THREE.Mesh;
-            }
+          laptop.updateMatrixWorld(true);
+          let bestScore = -Infinity;
+          let screenMesh: THREE.Mesh | null = null;
+          macbookNode.traverse(obj => {
+            if (!(obj instanceof THREE.Mesh)) return;
+            const box = new THREE.Box3().setFromObject(obj);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            const area = size.x * size.y;
+            if (area < 0.05) return;
+            const flatness  = area / (size.z + 0.0001);
+            const frontBonus = 1 + Math.max(center.z, 0) * 5;
+            const score = flatness * frontBonus;
+            if (score > bestScore) { bestScore = score; screenMesh = obj as THREE.Mesh; }
           });
-          if (bestMesh) {
+          if (screenMesh) {
             const scrMat = new THREE.MeshBasicMaterial({
               map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
-              color: new THREE.Color(4, 4, 4),
+              color: new THREE.Color(1.8, 1.8, 1.8), // mild HDR lift — keeps video detail visible under ACES
             });
-            (bestMesh as THREE.Mesh).material = scrMat;
+            (screenMesh as THREE.Mesh).material = scrMat;
             lapScreenMat = scrMat; lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
-            void lapVideoEl.play().catch(() => {});
           }
+        }
+
+        // Step 3: start video — force load + retry on canplay
+        if (lapScreenMat) {
+          lapVideoEl.load();
+          void lapVideoEl.play().catch(() => {
+            lapVideoEl.addEventListener('canplay', () => {
+              void lapVideoEl.play().catch(() => {});
+            }, { once: true });
+          });
         }
 
         // Remove Apple logo branding.
@@ -615,9 +638,8 @@ export default function ThreeScene() {
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
     const LID_CLOSED = 0.0;
-    // orientGroup = Rx(–π/2): screen starts at +Z (camera), rotates toward +Y as lid opens.
-    // At θ=–0.30π screen normal ≈ (0, +0.81, +0.59) — visible from camera above.
-    const LID_OPEN   = -Math.PI * 0.30;
+    // –0.65π ≈ 117° — natural wide-open laptop position; screen clearly faces camera
+    const LID_OPEN   = -Math.PI * 0.65;
 
     function tick() {
       const elapsed = clock.getElapsedTime();
@@ -678,8 +700,8 @@ export default function ThreeScene() {
         // On portrait/mobile zoom out a bit more so phone isn't clipped
         camTarget.set(0, 0, lerp(13, mob ? 7.5 : 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        // On portrait pull camera back so full MacBook width is visible
-        camTarget.set(0, 1.0, mob ? 9.5 : 7.5); lookY = 0.0;
+        // Camera slightly above, looking at screen — Z adjusted per aspect ratio
+        camTarget.set(0, 0.8, mob ? 9.5 : 8.0); lookY = 0.3;
       } else {
         camTarget.set(0, 0, 11);
       }
@@ -737,8 +759,8 @@ export default function ThreeScene() {
       lapMaterials.forEach(m => m.dispose());
       shadowMat.dispose();
       [sprTex, shadowTex, phoneVideoTex, lapVideoTex].forEach(tex => tex.dispose());
-      phoneVideoEl.pause(); phoneVideoEl.removeAttribute('src');
-      lapVideoEl.pause(); lapVideoEl.removeAttribute('src');
+      phoneVideoEl.pause(); phoneVideoEl.removeAttribute('src'); phoneVideoEl.remove();
+      lapVideoEl.pause(); lapVideoEl.removeAttribute('src');     lapVideoEl.remove();
     };
   }, [lang, isMobile]); // isMobile ensures effect re-runs when canvas becomes available // eslint-disable-line react-hooks/exhaustive-deps
 
