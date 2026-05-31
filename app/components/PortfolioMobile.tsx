@@ -1,10 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getT } from '@/lib/i18n';
 
 // Exact same design as the Three.js desktop overlay — mobile-only
 export default function PortfolioMobile() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const check = () => setShow(window.innerWidth < 761);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const params = useParams();
   const lang = (params?.lang as string) || 'de';
   const t    = getT(lang);
@@ -13,6 +22,8 @@ export default function PortfolioMobile() {
   const pfH2: [string, string, string] = ['Ausgewählte ', 'Arbeiten', '.'];
   if (lang === 'en') { pfH2[0] = 'Selected '; pfH2[1] = 'Works'; }
   if (lang === 'ch') { pfH2[0] = 'Usgwählti '; pfH2[1] = 'Arbeite'; }
+
+  if (!show) return null; // desktop: render nothing — Three.js overlay handles it
 
   return (
     <section
