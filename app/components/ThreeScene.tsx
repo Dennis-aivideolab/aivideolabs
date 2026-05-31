@@ -254,6 +254,9 @@ export default function ThreeScene() {
 
     let aborted = false;
 
+    // Portrait / mobile detection — used for performance & camera adjustments
+    const mob = innerWidth < 768;
+
     // ── math helpers ──
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
     const smooth = (p: number, a: number, b: number) => {
@@ -286,9 +289,9 @@ export default function ThreeScene() {
     ringLoop();
 
     // ── renderer ──
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mob, alpha: true });
     renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, mob ? 1.5 : 2)); // cap lower on mobile
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -333,7 +336,7 @@ export default function ThreeScene() {
     fill.position.set(-6, 2, -5); scene.add(fill);
 
     // ── dust particles ──
-    const COUNT = 2000;
+    const COUNT = mob ? 500 : 2000;  // fewer particles on mobile for performance
     const gd = new THREE.BufferGeometry();
     const pos = new Float32Array(COUNT * 3), col = new Float32Array(COUNT * 3);
     const cA = new THREE.Color(0xeef1f5), cB = new THREE.Color(0xc5cbd4), cC = new THREE.Color(0x9aa3b2);
@@ -672,9 +675,11 @@ export default function ThreeScene() {
       if (p < 0.09) {
         camTarget.set(tx * 2.0, -ty * 2.0, 14);
       } else if (p < 0.45) {
-        camTarget.set(0, 0, lerp(13, 6.2, smooth(p, 0.11, 0.30)));
+        // On portrait/mobile zoom out a bit more so phone isn't clipped
+        camTarget.set(0, 0, lerp(13, mob ? 7.5 : 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        camTarget.set(0, 1.0, 7.5); lookY = 0.0;  // camera above, looking down at open screen
+        // On portrait pull camera back so full MacBook width is visible
+        camTarget.set(0, 1.0, mob ? 9.5 : 7.5); lookY = 0.0;
       } else {
         camTarget.set(0, 0, 11);
       }
@@ -739,13 +744,14 @@ export default function ThreeScene() {
 
   // ── mobile: skip Three.js entirely ──────────────────────────────────────
   if (isMobile === null) return null;           // avoid SSR/hydration mismatch
-  if (isMobile) return <MobileLanding s={s} lang={lang} />;
+  // Three.js runs on all screen sizes — mobile gets performance-tuned settings below
 
   // ── styles (static, inline) ───────────────────────────────────────────────
   const layerBase: React.CSSProperties = {
     position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', opacity: 0,
     display: 'flex', flexDirection: 'column', justifyContent: 'center',
     padding: '0 clamp(20px, 6vw, 90px)', maxWidth: '1500px', margin: '0 auto',
+    touchAction: 'pan-y',  // don't swallow touch-scroll events
   };
 
   return (
@@ -753,7 +759,9 @@ export default function ThreeScene() {
       {/* ── Three.js canvas ── */}
       <canvas
         ref={canvasRef}
-        style={{ position: 'fixed', inset: 0, zIndex: 0, display: 'block', width: '100%', height: '100%' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, display: 'block', width: '100%', height: '100%',
+          touchAction: 'pan-y',  // let iOS pass vertical swipes through as scroll events
+        }}
       />
 
       {/* ── Atmospheric layers ── */}
