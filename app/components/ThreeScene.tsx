@@ -237,9 +237,10 @@ export default function ThreeScene() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   useEffect(() => { setIsMobile(window.innerWidth < 768); }, []);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const heroRef   = useRef<HTMLDivElement>(null);
-  const svcRef    = useRef<HTMLDivElement>(null);
+  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const heroRef     = useRef<HTMLDivElement>(null);
+  const svcRef      = useRef<HTMLDivElement>(null);
+  const lapVideoRef = useRef<HTMLDivElement>(null);  // scroll-animated video overlay
   const pfRef     = useRef<HTMLDivElement>(null);
   const refRef    = useRef<HTMLDivElement>(null);
   const ctaRef    = useRef<HTMLDivElement>(null);
@@ -382,35 +383,20 @@ export default function ThreeScene() {
       });
       return v;
     }
+    // Phone video only — laptop video is now a plain HTML <video> in the JSX
     const phoneVideoEl = makeVideo('/phone-video.mp4');
-    const lapVideoEl   = makeVideo('/laptop-video.mp4');
+    phoneVideoEl.addEventListener('pause', () => { if (!aborted) void phoneVideoEl.play().catch(() => {}); });
 
-    // VideoTexture — set needsUpdate manually each tick
     const phoneVideoTex = new THREE.VideoTexture(phoneVideoEl);
     phoneVideoTex.colorSpace = THREE.SRGBColorSpace;
     phoneVideoTex.minFilter = THREE.LinearFilter;
     phoneVideoTex.magFilter = THREE.LinearFilter;
 
-    const lapVideoTex = new THREE.VideoTexture(lapVideoEl);
-    lapVideoTex.colorSpace = THREE.SRGBColorSpace;
-    lapVideoTex.minFilter = THREE.LinearFilter;
-    lapVideoTex.magFilter = THREE.LinearFilter;
-
-    // Auto-restart if browser suspends the video
-    phoneVideoEl.addEventListener('pause', () => { if (!aborted) void phoneVideoEl.play().catch(() => {}); });
-    lapVideoEl.addEventListener('pause', () => { if (!aborted) void lapVideoEl.play().catch(() => {}); });
-
     // ── device model state ──
     let phone: THREE.Group | null = null;
-    let laptop: THREE.Group | null = null;
-    let laptopLid: THREE.Object3D | null = null;
     const phoneMaterials: THREE.Material[] = [];
-    const lapMaterials: THREE.Material[] = [];
     let phoneScreenMat: THREE.MeshBasicMaterial | null = null;
-    let lapScreenMat: THREE.MeshBasicMaterial | null = null;
-    const lapScreenMats: THREE.MeshBasicMaterial[] = [];
     const sglow = new THREE.PointLight(0xc0d4f5, 0, 8);
-    const lglow = new THREE.PointLight(0xc0d4f5, 0, 10);
 
     // ── load GLB models ──
     const dracoLoader = new DRACOLoader();
@@ -507,111 +493,8 @@ export default function ThreeScene() {
         }
       }
 
-      // ── MacBook ─────────────────────────────────────────────────────────
-      const macbookNode = gltf.scene.getObjectByName('macbook');
-      if (macbookNode) {
-        // Original model: rubber feet +Z, Apple logo +Y, screen –Y, keyboard –Z.
-        // Model uses Y-up: rubber feet –Y, Apple logo +Y, keyboard face +Y (base interior).
-        // Testing with no orientGroup rotation: MacBook sits "natural" on its –Y axis,
-        // screen opens toward +Z (camera) as lid rotates.
-        fitAndCenter(macbookNode, 'x', 3.5, 0);
-
-        const orientGroup = new THREE.Group();
-        // orientGroup.rotation.x = 0  (identity — screen opens toward camera)
-        orientGroup.add(macbookNode);
-
-        laptop = new THREE.Group();
-        laptop.add(orientGroup);
-        scene.add(laptop);
-        laptop.add(lglow);
-        // Glow in front of the screen (screen faces +Z when closed, tilts back as it opens)
-        lglow.position.set(0, 0.0, 1.5);
-
-        collectMaterials(macbookNode, lapMaterials);
-
-        // ── MacBook screen detection ──────────────────────────────────────────
-        laptopLid = macbookNode.getObjectByName('Bevels_2') ?? null;
-
-        // Screen detection: from GLTF analysis we know the exact node names.
-        // Object_4 = screen panel (Black_Glass_0_1), Object_6 = glass overlay (Glass_0_1).
-        // Use getObjectByName for direct access — no traversal / material-index ambiguity.
-        const screenObj = macbookNode.getObjectByName('Object_4');
-        const glassObj  = macbookNode.getObjectByName('Object_6');
-if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
-        if (screenObj instanceof THREE.Mesh) {
-          const scrMat = new THREE.MeshBasicMaterial({
-            map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
-            color: new THREE.Color(1.8, 1.8, 1.8),
-            depthWrite: false,
-            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
-          });
-          screenObj.material = scrMat;
-          lapScreenMat = scrMat;
-          lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
-        }
-        // Fallback: traverse if Object_4 wasn't found by name
-
-        // Step 2: geometry-based fallback — same flatness×frontBonus as iPhone detection
-        // The screen panel is the flattest (large XY area, thin Z) front-facing mesh.
-        if (!lapScreenMat) {
-          // At GLTF load time the lid is closed — the screen panel lies FLAT.
-          // When flat, the screen's XY area (glass-thickness × width) is tiny and
-          // the old `size.x * size.y` filter discards it. Instead sort the three
-          // dimensions and use the two LARGEST as face area + the SMALLEST as
-          // thickness — this correctly scores the screen panel regardless of whether
-          // the lid is closed (flat in Y) or open (thin in Z).
-          laptop.updateMatrixWorld(true);
-          let bestScore = -Infinity;
-          let screenMesh: THREE.Mesh | null = null;
-          macbookNode.traverse(obj => {
-            if (!(obj instanceof THREE.Mesh)) return;
-            const box = new THREE.Box3().setFromObject(obj);
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const dims = [size.x, size.y, size.z].sort((a, b) => a - b); // asc
-            const maxArea  = dims[1] * dims[2]; // two largest dims
-            const minDim   = dims[0];            // thinnest dimension
-            if (maxArea < 0.05) return;          // skip truly tiny meshes
-            const flatness = maxArea / (minDim + 0.0001);
-            const score = flatness;              // highest for thin flat panels
-            if (score > bestScore) { bestScore = score; screenMesh = obj as THREE.Mesh; }
-          });
-          if (screenMesh) {
-            const scrMat = new THREE.MeshBasicMaterial({
-              map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
-              color: new THREE.Color(1.8, 1.8, 1.8), // mild HDR lift — keeps video detail visible under ACES
-            });
-            (screenMesh as THREE.Mesh).material = scrMat;
-            lapScreenMat = scrMat; lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
-          }
-        }
-
-        // Step 3: video already started by makeVideo() — don't call load() again
-        // (load() resets playback). Just ensure it's playing.
-        if (lapScreenMat && lapVideoEl.paused) {
-          void lapVideoEl.play().catch(() => {});
-        }
-
-        // Remove Apple logo branding.
-        // - Material.002_0_1 and Material.001_0_1 are overlay meshes → hide
-        // - The Apple logo indentation is baked into Space_Grey_0_1 as a normal/bump map
-        //   → clear normalMap on those materials to erase the 3D indent
-        macbookNode.traverse(obj => {
-          if (!(obj instanceof THREE.Mesh)) return;
-          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-          const n = (mat?.name ?? '').toLowerCase();
-          if (n.includes('apple') || n.includes('logo') ||
-              n === 'material.002_0_1' || n === 'material.001_0_1') {
-            obj.visible = false;
-          }
-          // Remove normal-map bump that creates the 3D Apple logo indent
-          if ((n === 'space_grey_0_1' || n === 'space_grey.001_0_1') &&
-              mat instanceof THREE.MeshStandardMaterial) {
-            mat.normalMap = null;
-            mat.needsUpdate = true;
-          }
-        });
-      }
+      // MacBook 3D model removed — laptop section now uses a plain HTML video overlay
+      // controlled by the scroll progress (see lapVideoRef in tick())
     }, undefined, (err: unknown) => {
       if (!aborted) console.error('GLB load error:', err);
     });
@@ -648,15 +531,9 @@ if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
     // MacBook lid animation angles
     // orientGroup rotates the flat model upright (-90° X), so the lid opens
     // by rotating in +X direction to swing toward the camera
-    const LID_CLOSED = 0.0;
-    // –0.65π ≈ 117° — natural wide-open laptop position; screen clearly faces camera
-    const LID_OPEN   = -Math.PI * 0.65;
-
     function tick() {
       const elapsed = clock.getElapsedTime();
-      // Force texture update every frame
       if (phoneVideoEl.readyState >= 2) phoneVideoTex.needsUpdate = true;
-      if (lapVideoEl.readyState   >= 2) lapVideoTex.needsUpdate   = true;
       const p = getProgress();
 
       dust.rotation.y = elapsed * 0.02;
@@ -682,28 +559,16 @@ if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
         if (phoneScreenMat) phoneScreenMat.opacity = pScreen * (1 - pOut);
       }
 
-      // ── laptop ──
+      // ── laptop video overlay (HTML element, no 3D model) ──
       const lAppear = smooth(p, 0.50, 0.57);
-      const lOpen   = smooth(p, 0.55, 0.66);
-      const lScreen = smooth(p, 0.60, 0.68);
       const lOut    = smooth(p, 0.70, 0.76);
-
-      if (laptop) {
-        laptop.visible = lAppear > 0.001 && lOut < 0.999;
-        const ls = lerp(0.55, 1, lAppear) * lerp(1, 0.72, lOut);
-        laptop.scale.setScalar(ls);
-        if (laptopLid) laptopLid.rotation.x = lerp(LID_CLOSED, LID_OPEN, lOpen);
-        lglow.intensity = lScreen * 1.6 * (1 - lOut); // brighter glow in front of screen
-        laptop.rotation.y = lerp(-0.4, 0, lAppear) + tx * 0.14;
-        laptop.rotation.x = ty * 0.07;          // no constant tilt — screen already faces camera
-        laptop.position.y = 0.0 + lOut * 1.3;
-        const lop = lAppear * (1 - lOut);
-        lapMaterials.forEach(m => { m.opacity = lop; });
-        const scrOp = lScreen * (1 - lOut);
-        lapScreenMats.forEach(m => { m.opacity = scrOp; });
-        shadowMat.opacity = lop * 0.5;
-        shadow.scale.setScalar(ls);
-        shadow.position.y = -1.45 + laptop.position.y * 0.2;
+      const lapEl   = lapVideoRef.current;
+      if (lapEl) {
+        const vis = lAppear * (1 - lOut);
+        // Scale: grows from 0.55 to 1.0 on entry, shrinks back on exit
+        const sc = lerp(0.55, 1.0, lAppear) * lerp(1.0, 0.55, lOut);
+        lapEl.style.opacity  = String(vis);
+        lapEl.style.transform = `scale(${sc})`;
       }
 
       // ── camera ──
@@ -714,8 +579,7 @@ if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
         // On portrait/mobile zoom out a bit more so phone isn't clipped
         camTarget.set(0, 0, lerp(13, mob ? 7.5 : 6.2, smooth(p, 0.11, 0.30)));
       } else if (p < 0.77) {
-        // Camera slightly above, looking at screen — Z adjusted per aspect ratio
-        camTarget.set(0, 0.8, mob ? 9.5 : 8.0); lookY = 0.3;
+        camTarget.set(0, 0, 11); // relax camera — video overlay is HTML, not 3D
       } else {
         camTarget.set(0, 0, 11);
       }
@@ -770,11 +634,9 @@ if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
       renderer.dispose();
       dracoLoader.dispose();
       phoneMaterials.forEach(m => m.dispose());
-      lapMaterials.forEach(m => m.dispose());
       shadowMat.dispose();
-      [sprTex, shadowTex, phoneVideoTex, lapVideoTex].forEach(tex => tex.dispose());
+      [sprTex, shadowTex, phoneVideoTex].forEach(tex => tex.dispose());
       phoneVideoEl.pause(); phoneVideoEl.removeAttribute('src'); phoneVideoEl.remove();
-      lapVideoEl.pause(); lapVideoEl.removeAttribute('src');     lapVideoEl.remove();
     };
   }, [lang, isMobile]); // isMobile ensures effect re-runs when canvas becomes available // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -927,6 +789,28 @@ if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
         }}>
           {s.svcH2[0]}<em style={{ fontStyle: 'italic', fontWeight: 400 }}>{s.svcH2[1]}</em>{s.svcH2[2]}
         </h2>
+      </div>
+
+      {/* ── Laptop video overlay (scroll-animated, replaces 3D MacBook) ── */}
+      <div
+        ref={lapVideoRef}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: 0,
+          willChange: 'opacity, transform',
+        }}
+      >
+        <video
+          src="/laptop-video.mp4"
+          autoPlay muted loop playsInline
+          style={{
+            width: 'clamp(280px, 72vw, 960px)',
+            borderRadius: 'clamp(8px, 1.2vw, 20px)',
+            boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(220,228,238,0.12)',
+            display: 'block',
+          }}
+        />
       </div>
 
       {/* ── Portfolio layer ── */}
