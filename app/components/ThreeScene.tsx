@@ -19,7 +19,7 @@ const ST: Record<string, {
   ctaLabel: string; ctaH2: string; ctaH2em: string; ctaH2c: string; ctaBtn: string;
 }> = {
   de: {
-    heroEyebrow: 'Cinematic AI Content · Schweiz',
+    heroEyebrow: 'Cinematic AI Content · Schweiz · Deutschland',
     line1: 'Kino-Niveau.', line2: 'KI-Tempo.', line3: 'Null Drehtag.',
     sub: 'Wir verwandeln Marken-Visionen in cinematische Bewegtbilder, die im Gedächtnis bleiben — komponiert mit modernster KI, geliefert in Tagen statt Wochen.',
     btn1: 'Projekt starten', btn2: 'Showreel ansehen',
@@ -31,7 +31,7 @@ const ST: Record<string, {
     ctaLabel: "Let's create", ctaH2: 'Bereit für dein', ctaH2em: 'nächstes', ctaH2c: ' Projekt?', ctaBtn: 'Kontakt aufnehmen',
   },
   ch: {
-    heroEyebrow: 'Cinematic AI Content · Schwiiz',
+    heroEyebrow: 'Cinematic AI Content · Schwiiz · Dütschland',
     line1: 'Kino-Niveau.', line2: 'KI-Tempo.', line3: 'Null Drehtag.',
     sub: 'Mir verwandled Marke-Visione i cinematischi Bewegtbilder, wo im Gedächtnis bliibe — komponiert mit modernschter KI, gliiferet i Tage statt Wuche.',
     btn1: 'Projekt starte', btn2: 'Showreel aaluege',
@@ -43,7 +43,7 @@ const ST: Record<string, {
     ctaLabel: "Let's create", ctaH2: 'Bisch bereit für dis', ctaH2em: 'nächschtes', ctaH2c: ' Projekt?', ctaBtn: 'Kontakt ufnäh',
   },
   en: {
-    heroEyebrow: 'Cinematic AI Content · Switzerland',
+    heroEyebrow: 'Cinematic AI Content · Switzerland · Germany',
     line1: 'Cinema-Grade.', line2: 'AI-Speed.', line3: 'Zero Shoot.',
     sub: 'We transform brand visions into cinematic motion pictures that stay in memory — composed with cutting-edge AI, delivered in days instead of weeks.',
     btn1: 'Start Project', btn2: 'Watch Showreel',
@@ -697,41 +697,67 @@ export default function ThreeScene() {
       {/* ── Navigation ── */}
       <nav style={{
         position: 'fixed', zIndex: 20, top: 0, left: 0, right: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '24px clamp(20px,5vw,64px)',
+        display: 'flex', flexDirection: 'column',
         borderBottom: '1px solid var(--line)',
         backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       }}>
-        <Link href={`/${lang}`} style={{
-          fontFamily: 'var(--font-fraunces,Georgia),serif', fontWeight: 500,
-          letterSpacing: '0.22em', fontSize: 15,
-          display: 'flex', alignItems: 'center', gap: 12,
-          color: 'var(--ink)', textDecoration: 'none',
+        {/* Top row: logo + CTA */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px clamp(16px,5vw,64px)',
         }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: 'var(--plat)', boxShadow: '0 0 10px var(--plat)', display: 'inline-block',
-          }} />
-          AI VIDEO LABS
-        </Link>
-        <div className="hide-mobile" style={{ display: 'flex', gap: 34, fontSize: 13, letterSpacing: '0.06em' }}>
+          <Link href={`/${lang}`} style={{
+            fontFamily: 'var(--font-fraunces,Georgia),serif', fontWeight: 500,
+            letterSpacing: '0.22em', fontSize: 15,
+            display: 'flex', alignItems: 'center', gap: 12,
+            color: 'var(--ink)', textDecoration: 'none',
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: 'var(--plat)', boxShadow: '0 0 10px var(--plat)', display: 'inline-block',
+            }} />
+            AI VIDEO LABS
+          </Link>
+          {/* Desktop: nav links inline */}
+          <div className="hide-mobile" style={{ display: 'flex', gap: 34, fontSize: 13, letterSpacing: '0.06em' }}>
+            {navLinks.map(l => (
+              <a key={l.href} href={l.href} style={{ color: 'var(--muted)', textDecoration: 'none', transition: 'color .25s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--ink)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+          <a href={`/${lang}#contact`} style={{
+            fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase',
+            padding: '10px 18px', border: '1px solid var(--plat-dk)', borderRadius: 2,
+            color: 'var(--plat-lt)', textDecoration: 'none', transition: 'all .35s', whiteSpace: 'nowrap',
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--plat)'; (e.currentTarget as HTMLElement).style.color = '#0c0e12'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--plat)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--plat-lt)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--plat-dk)'; }}>
+            {t.nav.cta.replace(' →','').replace(' ✦','')}
+          </a>
+        </div>
+        {/* Mobile: nav links in a second row */}
+        <div className="hide-desktop" style={{
+          display: 'flex', gap: 0, overflowX: 'auto',
+          borderTop: '1px solid rgba(220,228,238,0.07)',
+          padding: '0 4px',
+          scrollbarWidth: 'none',
+        }}>
           {navLinks.map(l => (
-            <a key={l.href} href={l.href} style={{ color: 'var(--muted)', textDecoration: 'none', transition: 'color .25s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--ink)')}
+            <a key={l.href} href={l.href} style={{
+              color: 'var(--muted)', textDecoration: 'none',
+              fontSize: 11, letterSpacing: '0.10em', textTransform: 'uppercase',
+              padding: '10px 14px', whiteSpace: 'nowrap', flexShrink: 0,
+              transition: 'color .25s',
+            }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--plat-lt)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}>
               {l.label}
             </a>
           ))}
         </div>
-        <a href={`/${lang}#contact`} style={{
-          fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase',
-          padding: '12px 24px', border: '1px solid var(--plat-dk)', borderRadius: 2,
-          color: 'var(--plat-lt)', textDecoration: 'none', transition: 'all .35s',
-        }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--plat)'; (e.currentTarget as HTMLElement).style.color = '#0c0e12'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--plat)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--plat-lt)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--plat-dk)'; }}>
-          {t.nav.cta.replace(' →','').replace(' ✦','')}
-        </a>
       </nav>
 
       {/* ── Hero layer ── */}
