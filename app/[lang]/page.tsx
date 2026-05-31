@@ -17,7 +17,10 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
       <GoogleAnalytics />
       <ThreeScene />
       <main id="contact" style={{ position: 'relative', zIndex: 15, background: 'var(--bg)' }}>
-        <Portfolio />
+        {/* Portfolio visible on mobile — desktop uses the Three.js scroll overlay */}
+        <div className="hide-desktop">
+          <Portfolio />
+        </div>
         <Contact />
         <Footer />
       </main>
