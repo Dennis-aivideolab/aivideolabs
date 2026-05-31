@@ -1,5 +1,4 @@
 import ThreeScene from '../components/ThreeScene';
-import Portfolio from '../components/Portfolio';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
 import CookieBanner from '../components/CookieBanner';
@@ -17,10 +16,6 @@ export default async function LangHome({ params }: { params: Promise<{ lang: str
       <GoogleAnalytics />
       <ThreeScene />
       <main id="contact" style={{ position: 'relative', zIndex: 15, background: 'var(--bg)' }}>
-        {/* Portfolio visible on mobile — desktop uses the Three.js scroll overlay */}
-        <div className="hide-desktop">
-          <Portfolio />
-        </div>
         <Contact />
         <Footer />
       </main>
