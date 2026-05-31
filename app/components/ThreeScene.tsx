@@ -374,8 +374,8 @@ export default function ThreeScene() {
     function makeVideo(src: string): HTMLVideoElement {
       const v = document.createElement('video');
       v.src = src; v.loop = true; v.muted = true; v.playsInline = true; v.preload = 'auto';
-      // Must have real size & be in viewport — Chrome skips frame decoding for off-screen/0-size videos
-      v.style.cssText = 'position:fixed;bottom:0;left:0;width:320px;height:180px;opacity:0.001;z-index:-1;pointer-events:none';
+      // Real size in viewport so Chrome decodes frames; z-index:1 prevents deprioritization
+      v.style.cssText = 'position:fixed;bottom:0;left:0;width:320px;height:180px;opacity:0.001;z-index:1;pointer-events:none';
       document.body.appendChild(v);
       void v.play().catch(() => {
         v.addEventListener('canplay', () => { void v.play().catch(() => {}); }, { once: true });
@@ -385,6 +385,7 @@ export default function ThreeScene() {
     const phoneVideoEl = makeVideo('/phone-video.mp4');
     const lapVideoEl   = makeVideo('/laptop-video.mp4');
 
+    // VideoTexture — set needsUpdate manually each tick
     const phoneVideoTex = new THREE.VideoTexture(phoneVideoEl);
     phoneVideoTex.colorSpace = THREE.SRGBColorSpace;
     phoneVideoTex.minFilter = THREE.LinearFilter;
@@ -394,6 +395,10 @@ export default function ThreeScene() {
     lapVideoTex.colorSpace = THREE.SRGBColorSpace;
     lapVideoTex.minFilter = THREE.LinearFilter;
     lapVideoTex.magFilter = THREE.LinearFilter;
+
+    // Auto-restart if browser suspends the video
+    phoneVideoEl.addEventListener('pause', () => { if (!aborted) void phoneVideoEl.play().catch(() => {}); });
+    lapVideoEl.addEventListener('pause', () => { if (!aborted) void lapVideoEl.play().catch(() => {}); });
 
     // ── device model state ──
     let phone: THREE.Group | null = null;
@@ -527,22 +532,24 @@ export default function ThreeScene() {
         // ── MacBook screen detection ──────────────────────────────────────────
         laptopLid = macbookNode.getObjectByName('Bevels_2') ?? null;
 
-        // Step 1: try known material names (fast path)
-        // Only apply to Black_Glass_0_1 (main panel). Glass_0_1 is a co-planar glass
-        // overlay — putting video on both causes Z-fighting (blue/orange blinking).
-        const screenNames = new Set(['Black_Glass_0_1']);
-        macbookNode.traverse(obj => {
-          if (!(obj instanceof THREE.Mesh)) return;
-          const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-          if (!screenNames.has(mat?.name ?? '')) return;
+        // Screen detection: from GLTF analysis we know the exact node names.
+        // Object_4 = screen panel (Black_Glass_0_1), Object_6 = glass overlay (Glass_0_1).
+        // Use getObjectByName for direct access — no traversal / material-index ambiguity.
+        const screenObj = macbookNode.getObjectByName('Object_4');
+        const glassObj  = macbookNode.getObjectByName('Object_6');
+if (glassObj) glassObj.visible = false; // hide glass overlay → no Z-fighting
+        if (screenObj instanceof THREE.Mesh) {
           const scrMat = new THREE.MeshBasicMaterial({
             map: lapVideoTex, transparent: true, opacity: 0, side: THREE.DoubleSide,
-            color: new THREE.Color(1.8, 1.8, 1.8), // mild HDR lift — keeps video detail visible under ACES
+            color: new THREE.Color(1.8, 1.8, 1.8),
+            depthWrite: false,
+            polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
           });
-          (obj as THREE.Mesh).material = scrMat;
-          if (!lapScreenMat) lapScreenMat = scrMat;
+          screenObj.material = scrMat;
+          lapScreenMat = scrMat;
           lapScreenMats.push(scrMat); lapMaterials.push(scrMat);
-        });
+        }
+        // Fallback: traverse if Object_4 wasn't found by name
 
         // Step 2: geometry-based fallback — same flatness×frontBonus as iPhone detection
         // The screen panel is the flattest (large XY area, thin Z) front-facing mesh.
@@ -579,14 +586,10 @@ export default function ThreeScene() {
           }
         }
 
-        // Step 3: start video — force load + retry on canplay
-        if (lapScreenMat) {
-          lapVideoEl.load();
-          void lapVideoEl.play().catch(() => {
-            lapVideoEl.addEventListener('canplay', () => {
-              void lapVideoEl.play().catch(() => {});
-            }, { once: true });
-          });
+        // Step 3: video already started by makeVideo() — don't call load() again
+        // (load() resets playback). Just ensure it's playing.
+        if (lapScreenMat && lapVideoEl.paused) {
+          void lapVideoEl.play().catch(() => {});
         }
 
         // Remove Apple logo branding.
@@ -651,11 +654,9 @@ export default function ThreeScene() {
 
     function tick() {
       const elapsed = clock.getElapsedTime();
-      // Force video textures to update each frame — VideoTexture.needsUpdate
-      // must be set manually when videos are off-screen DOM elements in some
-      // Three.js / browser combinations.
-      if (!phoneVideoEl.paused) phoneVideoTex.needsUpdate = true;
-      if (!lapVideoEl.paused)   lapVideoTex.needsUpdate   = true;
+      // Force texture update every frame
+      if (phoneVideoEl.readyState >= 2) phoneVideoTex.needsUpdate = true;
+      if (lapVideoEl.readyState   >= 2) lapVideoTex.needsUpdate   = true;
       const p = getProgress();
 
       dust.rotation.y = elapsed * 0.02;
